@@ -14,7 +14,8 @@ jobs:
       run: npm install -g cordova
     - name: Create Android Project
       run: |
-        cordova create myapp com.creative.myapp "MyCloudApp"
+        cordova create myapp com.omar.shield "OmarShield X"
+
         cp index.html myapp/www/
         cd myapp
         cordova platform add android
