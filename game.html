@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>OmarShield X - Pro Edition</title>
+    <style>
+        body, html { margin: 0; padding: 0; overflow: hidden; background: #020208; font-family: 'Segoe UI', sans-serif; user-select: none; }
+        canvas { display: block; }
+        #hud { position: absolute; top: 15px; left: 15px; right: 15px; display: flex; justify-content: space-between; color: #00ffcc; font-size: 18px; font-weight: bold; text-shadow: 0 0 10px #00ffcc; pointer-events: none; }
+        #ai-hud { color: #ffaa00; text-shadow: 0 0 10px #ffaa00; }
+        #game-over-screen { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: white; background: rgba(5, 5, 20, 0.85); padding: 30px; border-radius: 15px; border: 2px solid #ff0055; box-shadow: 0 0 30px rgba(255, 0, 85, 0.5); }
+        #game-over-screen h1 { color: #ff0055; font-size: 35px; text-shadow: 0 0 15px #ff0055; margin: 0 0 10px 0; }
+        #winner-msg { font-size: 20px; color: #00ffcc; margin-bottom: 20px; font-weight: bold; }
+        #btn-restart { background: #00ffcc; color: black; border: none; padding: 12px 35px; font-size: 18px; font-weight: bold; border-radius: 8px; cursor: pointer; box-shadow: 0 0 15px #00ffcc; transition: 0.2s; }
+    </style>
+</head>
+<body>
+
+    <div id="hud">
+        <div>OMAR (YOU): <span id="score">0</span></div>
+        <div id="ai-hud">BOT (COMPETITOR): <span id="ai-score">0</span></div>
+    </div>
+    
+    <div id="game-over-screen">
+        <h1>BATTLE ENDED</h1>
+        <div id="winner-msg">Calculating Winner...</div>
+        <button id="btn-restart" onclick="restartGame()">PLAY AGAIN</button>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let score = 0;
+        let aiScore = 0;
+        let gameOver = false;
+
+        // Player Ship
+        const ship = { x: canvas.width * 0.25, y: canvas.height - 120, width: 50, height: 45 };
+        // AI Competitor Ship
+        const aiShip = { x: canvas.width * 0.75, y: canvas.height - 120, width: 50, height: 45, speed: 4 };
+
+        let lasers = [];
+        let enemies = [];
+        let particles = [];
+
+        // Smooth Touch Controls for Omar's Ship
+        window.addEventListener("touchmove", (e) => {
+            if (gameOver) return;
+            const touch = e.touches[0];
+            ship.x = touch.clientX - ship.width / 2;
+            if (ship.x < 0) ship.x = 0;
+            if (ship.x > canvas.width - ship.width) ship.x = canvas.width - ship.width;
+        });
+
+        // Auto Shooting System
+        setInterval(() => {
+            if (!gameOver) {
+                // Omar shots (Cyan)
+                lasers.push({ x: ship.x + ship.width / 2 - 3, y: ship.y, width: 6, height: 16, speed: 12, isAI: false });
+                // AI shots (Orange)
+                lasers.push({ x: aiShip.x + aiShip.width / 2 - 3, y: aiShip.y, width: 6, height: 16, speed: 11, isAI: true });
+            }
+        }, 250);
+
+        // Spawn Advanced Enemies (Viruses)
+        setInterval(() => {
+            if (!gameOver) {
+                const rand = Math.random();
+                if (rand < 0.6) {
+                    // Regular Virus
+                    enemies.push({ x: Math.random() * (canvas.width - 30), y: -30, size: 25, speed: Math.random() * 2 + 3, hp: 1, type: 'regular', color: '#ff0055' });
+                } else if (rand < 0.85) {
+                    // Fast Virus (Green)
+                    enemies.push({ x: Math.random() * (canvas.width - 20), y: -20, size: 18, speed: Math.random() * 2 + 6, hp: 1, type: 'fast', color: '#00ff66' });
+                } else {
+                    // Boss Virus (Giant Violet - Needs 3 Hits)
+                    enemies.push({ x: Math.random() * (canvas.width - 60), y: -60, size: 55, speed: 1.5, hp: 3, type: 'boss', color: '#b026ff' });
+                }
+            }
+        }, 700);
+
+        function createExplosion(x, y, color) {
+            for (let i = 0; i < 12; i++) {
+                particles.push({
+                    x: x, y: y,
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: (Math.random() - 0.5) * 6,
+                    radius: Math.random() * 3 + 1,
+                    alpha: 1,
+                    color: color
+                });
+            }
+        }
+
+        function restartGame() {
+            score = 0; aiScore = 0; lasers = []; enemies = []; particles = []; gameOver = false;
+            document.getElementById("score").innerText = score;
+            document.getElementById("ai-score").innerText = aiScore;
+            document.getElementById("game-over-screen").style.display = "none";
+            update();
+        }
+
+        function drawSpaceship(x, y, color, isPlayer) {
+            ctx.fillStyle = color;
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = color;
+            
+            // Wings
+            ctx.beginPath();
+            ctx.moveTo(x, y + 40);
+            ctx.lineTo(x + 25, y);
+            ctx.lineTo(x + 50, y + 40);
+            ctx.lineTo(x + 35, y + 30);
+            ctx.lineTo(x + 15, y + 30);
+            ctx.closePath();
+            ctx.fill();
+
+            // Engine Flame Effect
+            ctx.fillStyle = isPlayer ? '#38bdf8' : '#ff7700';
+            ctx.fillRect(x + 20, y + 40, 10, Math.random() * 12 + 5);
+            ctx.shadowBlur = 0;
+        }
+
+        function update() {
+            if (gameOver) return;
+
+            ctx.fillStyle = "rgba(2, 2, 8, 0.3)"; // Star trail effect
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 1. AI Competitor Logic (Chases nearest enemy)
+            if (enemies.length > 0) {
+                let target = enemies[0];
+                for (let e of enemies) { if (e.y > target.y) target = e; } // Focus lowest enemy
+                let targetX = target.x + target.size / 2 - aiShip.width / 2;
+                if (aiShip.x < targetX) aiShip.x += aiShip.speed;
+                if (aiShip.x > targetX) aiShip.x -= aiShip.speed;
+            }
+
+            // Draw Ships
+            drawSpaceship(ship.x, ship.y, '#00ffcc', true);
+            drawSpaceship(aiShip.x, aiShip.y, '#ffaa00', false);
+
+            // 2. Lasers Mechanics
+            for (let i = lasers.length - 1; i >= 0; i--) {
+                lasers[i].y -= lasers[i].speed;
+                ctx.fillStyle = lasers[i].isAI ? '#ffaa00' : '#00ffcc';
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = ctx.fillStyle;
+                ctx.fillRect(lasers[i].x, lasers[i].y, lasers[i].width, lasers[i].height);
+                ctx.shadowBlur = 0;
+
+                if (lasers[i].y < 0) lasers.splice(i, 1);
+            }
+
+            // 3. Enemies Mechanics
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                enemies[i].y += enemies[i].speed;
+                
+                // Neon Virus Glow
+                ctx.fillStyle = enemies[i].color;
+                ctx.shadowBlur = 12;
+                ctx.shadowColor = enemies[i].color;
+                ctx.beginPath();
+                ctx.arc(enemies[i].x + enemies[i].size/2, enemies[i].y + enemies[i].size/2, enemies[i].size/2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+
+                // Base Breached (Game Over trigger)
+                if (enemies[i].y > canvas.height) {
+                    gameOver = true;
+                    let winMsg = score > aiScore ? "🎉 OMAR WINS THE MATCH!" : "🤖 BOT BEAT YOUR SCORE!";
+                    if(score === aiScore) winMsg = "🤝 IT'S A TIE BATTLE!";
+                    document.getElementById("winner-msg").innerText = winMsg;
+                    document.getElementById("game-over-screen").style.display = "block";
+                    return;
+                }
+
+                // Hit Detection
+                for (let j = lasers.length - 1; j >= 0; j--) {
+                    let l = lasers[j];
+                    if (l.x > enemies[i].x && l.x < enemies[i].x + enemies[i].size &&
+                        l.y > enemies[i].y && l.y < enemies[i].y + enemies[i].size) {
+                        
+                        enemies[i].hp--;
+                        lasers.splice(j, 1);
+
+                        if (enemies[i].hp <= 0) {
+                            createExplosion(enemies[i].x + enemies[i].size/2, enemies[i].y + enemies[i].size/2, enemies[i].color);
+                            if (!l.isAI) {
+                                score += enemies[i].type === 'boss' ? 40 : 10;
+                                document.getElementById("score").innerText = score;
+                            } else {
+                                aiScore += enemies[i].type === 'boss' ? 40 : 10;
+                                document.getElementById("ai-score").innerText = aiScore;
+                            }
+                            enemies.splice(i, 1);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // 4. Explosion Particles Mechanics
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.x += p.vx; p.y += p.vy;
+                p.alpha -= 0.02;
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = p.alpha;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1.0;
+                if (p.alpha <= 0) particles.splice(i, 1);
+            }
+
+            requestAnimationFrame(update);
+        }
+
+        update();
+    </script>
+</body>
+</html>
