@@ -179,7 +179,21 @@
     }
   }
 
-  start();
+  document.addEventListener('deviceready', () => {
+    var permissions = cordova.plugins.permissions;
+    permissions.requestPermission(permissions.CAMERA, (status) => {
+        if (status.hasPermission) {
+            // سيتم تشغيل الكاميرا فقط بعد موافقة المستخدم
+            start(); 
+        } else {
+            statusEl.innerText = "يرجى منح صلاحية الكاميرا";
+        }
+    }, () => {
+        statusEl.innerText = "خطأ في طلب الصلاحية";
+    });
+}, false);
+
 </script>
 </body>
 </html>
+ 
