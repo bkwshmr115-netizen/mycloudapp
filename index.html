@@ -1,200 +1,173 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Omar SignLink - Real Hand Tracking</title>
-<meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; style-src * 'unsafe-inline'; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src * 'unsafe-inline' 'unsafe-eval'; img-src * data: blob:;">
-<style>
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body, html { width:100%; height:100%; background:#0a0e17; font-family: 'Segoe UI', sans-serif; color:white; overflow:hidden; }
-  #header { background:linear-gradient(90deg,#0f172a,#1e1b4b); padding:12px; text-align:center; border-bottom:2px solid #00ffcc; }
-  #header h1 { font-size:20px; color:#00ffcc; margin:0; }
-  #subtitle { font-size:11px; color:#94a3b8; margin-top:3px; }
-  #container { position:relative; width:100%; height:calc(100% - 140px); background:#000; }
-  video, canvas { position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; transform:scaleX(-1); }
-  #status { position:absolute; top:10px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.7); padding:6px 14px; border-radius:20px; font-size:12px; z-index:10; border:1px solid #334155; }
-  #result { height:90px; background:#0f172a; display:flex; flex-direction:column; align-items:center; justify-content:center; border-top:1px solid #1e293b; }
-  #translated { font-size:24px; font-weight:bold; color:#00ffcc; min-height:32px; }
-  #info { font-size:12px; color:#94a3b8; margin-top:4px; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Omar SignLink - Real Hand Tracking</title>
+    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; style-src * 'unsafe-inline'; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src * 'unsafe-inline' 'unsafe-eval'; img-src * data: blob:;">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body, html { width:100%; height:100%; background:#0a0a1a; font-family: sans-serif; overflow: hidden; }
+        #header { background:linear-gradient(90deg, #0f172a, #1e293b); padding: 15px; text-align: center; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        #header h1 { font-size:20px; color:#00ffcc; margin:0; text-transform: uppercase; letter-spacing: 2px; }
+        #subtitle { font-size:11px; color:#94a3b8; margin-top:5px; }
+        #container { position:relative; width:100%; height:calc(100% - 170px); display: flex; justify-content: center; align-items: center; }
+        video, canvas { position:absolute; top:0; left:0; width:100%; height:100%; object-fit: cover; }
+        #status { position:absolute; top:10px; left:50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); color: #00ffcc; padding: 8px 15px; border-radius: 20px; font-size: 12px; border: 1px solid #00ffcc; z-index: 10; }
+        #result { height:90px; background:#0f172a; display:flex; flex-direction: column; justify-content: center; align-items: center; border-top: 2px solid #1e293b; }
+        #translated { font-size:24px; font-weight:bold; color:#00ffcc; margin-bottom: 5px; }
+        #info { font-size:12px; color:#94a3b8; }
+    </style>
 </head>
 <body>
 
 <div id="header">
-  <h1>OMAR SIGNLINK</h1>
-  <div id="subtitle">Real Hand Tracking with MediaPipe</div>
+    <h1>OMAR SIGNLINK</h1>
+    <div id="subtitle">Real Hand Tracking with MediaPipe</div>
 </div>
 
 <div id="container">
-  <video id="video" autoplay playsinline muted></video>
-  <canvas id="canvas"></canvas>
-  <div id="status">جاري تحميل نموذج الذكاء الاصطناعي...</div>
+    <video id="video" autoplay playsinline muted></video>
+    <canvas id="canvas"></canvas>
+    <div id="status">جاري تحميل نموذج الذكاء الاصطناعي...</div>
 </div>
 
 <div id="result">
-  <div id="translated">ضع يدك أمام الكاميرا</div>
-  <div id="info">التتبع الحقيقي يعمل الآن</div>
+    <div id="translated">ضع يدك أمام الكاميرا</div>
+    <div id="info">التتبع الحقيقي يعمل الآن</div>
 </div>
 
-<!-- مكتبات MediaPipe -->
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+<!-- استدعاء مكتبات MediaPipe الرسمية السحابية -->
+<script src="https://jsdelivr.net" crossorigin="anonymous"></script>
+<script src="https://jsdelivr.net" crossorigin="anonymous"></script>
+<script src="https://jsdelivr.net" crossorigin="anonymous"></script>
+<script src="https://jsdelivr.net" crossorigin="anonymous"></script>
 
 <script>
-  const video = document.getElementById('video');
-  const canvas = document.getElementById('canvas');
-  const ctx = canvas.getContext('2d');
-  const statusEl = document.getElementById('status');
-  const translatedEl = document.getElementById('translated');
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const statusEl = document.getElementById('status');
+    const translatedEl = document.getElementById('translated');
 
-  let lastGesture = "";
-  let gestureTimeout = null;
+    let lastGesture = "";
 
-  // تهيئة MediaPipe Hands
-  const hands = new Hands({
-    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
-  });
-
-  hands.setOptions({
-    maxNumHands: 2,
-    modelComplexity: 1,
-    minDetectionConfidence: 0.7,
-    minTrackingConfidence: 0.6
-  });
-
-  hands.onResults(onResults);
-
-  function onResults(results) {
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-
-    ctx.save();
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
-
-    if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-      statusEl.innerText = "يد مكتشفة ✓";
-      statusEl.style.borderColor = "#00ffcc";
-      statusEl.style.color = "#00ffcc";
-
-      for (const landmarks of results.multiHandLandmarks) {
-        // رسم التوصيلات والنقاط
-        drawConnectors(ctx, landmarks, HAND_CONNECTIONS, {color: '#00ffcc', lineWidth: 3});
-        drawLandmarks(ctx, landmarks, {color: '#ff0055', lineWidth: 1, radius: 4});
-
-        // تحليل بسيط للإشارة
-        const gesture = detectBasicGesture(landmarks);
-        if (gesture && gesture !== lastGesture) {
-          lastGesture = gesture;
-          translatedEl.innerText = gesture;
-          speak(gesture);
-
-          clearTimeout(gestureTimeout);
-          gestureTimeout = setTimeout(() => {
-            lastGesture = "";
-          }, 2000);
+    // دالة النطق الصوتي العربي للكلمات المترجمة
+    function speak(text) {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel(); // إيقاف أي نطق سابق فوراً
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'ar-SA';
+            window.speechSynthesis.speak(utterance);
         }
-      }
-    } else {
-      statusEl.innerText = "لا توجد يد في الإطار";
-      statusEl.style.borderColor = "#334155";
-      statusEl.style.color = "#94a3b8";
-    }
-    ctx.restore();
-  }
-
-  // قواعد بسيطة جداً لبعض الإشارات الأساسية
-  function detectBasicGesture(landmarks) {
-    // أطراف الأصابع
-    const thumbTip = landmarks[4];
-    const indexTip = landmarks[8];
-    const middleTip = landmarks[12];
-    const ringTip = landmarks[16];
-    const pinkyTip = landmarks[20];
-
-    // مفاصل وسط الأصابع
-    const indexPip = landmarks[6];
-    const middlePip = landmarks[10];
-    const ringPip = landmarks[14];
-    const pinkyPip = landmarks[18];
-
-    // هل الأصابع ممدودة؟
-    const indexUp = indexTip.y < indexPip.y;
-    const middleUp = middleTip.y < middlePip.y;
-    const ringUp = ringTip.y < ringPip.y;
-    const pinkyUp = pinkyTip.y < pinkyPip.y;
-
-    // يد مفتوحة
-    if (indexUp && middleUp && ringUp && pinkyUp) {
-      return "يد مفتوحة / سلام";
     }
 
-    // قبضة (معظم الأصابع مطوية)
-    if (!indexUp && !middleUp && !ringUp && !pinkyUp) {
-      return "قبضة يد";
-    }
-
-    // إشارة إعجاب تقريبية (إبهام مرتفع)
-    if (thumbTip.y < landmarks[3].y && !indexUp && !middleUp) {
-      return "إعجاب (Thumbs Up)";
-    }
-
-    return null;
-  }
-
-  function speak(text) {
-    if ('speechSynthesis' in window) {
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = 'ar-SA';
-      u.rate = 0.9;
-      speechSynthesis.cancel();
-      speechSynthesis.speak(u);
-    }
-  }
-
-  // تشغيل الكاميرا
-  async function start() {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
-        audio: false
-      });
-      video.srcObject = stream;
-
-      const camera = new Camera(video, {
-        onFrame: async () => {
-          await hands.send({ image: video });
-        },
-        width: 640,
-        height: 480
-      });
-      camera.start();
-
-      statusEl.innerText = "جاري التتبع...";
-    } catch (err) {
-      statusEl.innerText = "خطأ في فتح الكاميرا";
-      console.error(err);
-    }
-  }
-
-  document.addEventListener('deviceready', () => {
-    var permissions = cordova.plugins.permissions;
-    permissions.requestPermission(permissions.CAMERA, (status) => {
-        if (status.hasPermission) {
-            // سيتم تشغيل الكاميرا فقط بعد موافقة المستخدم
-            start(); 
-        } else {
-            statusEl.innerText = "يرجى منح صلاحية الكاميرا";
-        }
-    }, () => {
-        statusEl.innerText = "خطأ في طلب الصلاحية";
+    const hands = new Hands({
+        locateFile: (file) => `https://jsdelivr.net{file}`
     });
-}, false);
 
-</script>    
+    hands.setOptions({
+        maxNumHands: 1,
+        modelComplexity: 1,
+        minDetectionConfidence: 0.7,
+        minTrackingConfidence: 0.6
+    });
+
+    hands.onResults(onResults);
+
+    function onResults(results) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+
+        ctx.save();
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
+
+        if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+            statusEl.innerText = "✓ الإشارة نشطة";
+            statusEl.style.borderColor = "#00ffcc";
+            statusEl.style.color = "#00ffcc";
+
+            const landmarks = results.multiHandLandmarks[0]; // قراءة اليد الأولى
+
+            // رسم هيكل اليد والنقاط الملونة
+            drawConnectors(ctx, landmarks, HAND_CONNECTIONS, {color: '#00ffcc', lineWidth: 4});
+            drawLandmarks(ctx, landmarks, {color: '#ff0055', lineWidth: 1, radius: 3});
+
+            // 1. دالة فحص إذا كان الإصبع مفروداً (مقارنة طرف الإصبع بالمفصل السفلي)
+            const isFingerRaised = (tip, pip) => landmarks[tip].y < landmarks[pip].y;
+
+            // 2. فحص حالة الأصابع الأربعة الأساسية
+            const indexRaised  = isFingerRaised(8, 6);   // السبابة
+            const middleRaised = isFingerRaised(12, 10); // الوسطى
+            const ringRaised   = isFingerRaised(16, 14);   // البنصر
+            const pinkyRaised  = isFingerRaised(20, 18);  // الخنصر
+
+            let currentGesture = "جاري تحليل الإشارة...";
+
+            // 3. شروط التعرف الذكي على الكلمات المترجمة
+            if (indexRaised && middleRaised && ringRaised && pinkyRaised) {
+                currentGesture = "مرحباً";
+            } else if (indexRaised && middleRaised && !ringRaised && !pinkyRaised) {
+                currentGesture = "شكراً";
+            } else if (indexRaised && !middleRaised && !ringRaised && pinkyRaised) {
+                currentGesture = "أحبك";
+            } else if (!indexRaised && !middleRaised && !ringRaised && !pinkyRaised) {
+                currentGesture = "نعم / موافق";
+            }
+
+            // 4. تحديث النص المترجم على الشاشة ونطقه صوتياً فوراً دون تكرار
+            if (currentGesture !== lastGesture && currentGesture !== "جاري تحليل الإشارة...") {
+                lastGesture = currentGesture;
+                translatedEl.innerText = currentGesture;
+                speak(currentGesture);
+            }
+        } else {
+            statusEl.innerText = "ابحث عن يد...";
+            statusEl.style.borderColor = "#94a3b8";
+            statusEl.style.color = "#94a3b8";
+        }
+        ctx.restore();
+    }
+
+    // تشغيل الكاميرا بعد أخذ الإذن التفاعلي من كوردوفا
+    document.addEventListener('deviceready', () => {
+        var permissions = cordova.plugins.permissions;
+        permissions.requestPermission(permissions.CAMERA, (status) => {
+            if (status.hasPermission) {
+                start(); 
+            } else {
+                statusEl.innerText = "يرجى منح صلاحية الكاميرا";
+            }
+        }, () => {
+            statusEl.innerText = "خطأ في طلب الصلاحية";
+        });
+    }, false);
+
+    async function start() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+                audio: false
+            });
+            video.srcObject = stream;
+
+            const camera = new Camera(video, {
+                onFrame: async () => {
+                    await hands.send({ image: video });
+                },
+                width: 640,
+                height: 480
+            });
+            camera.start();
+        } catch (err) {
+            statusEl.innerText = "خطأ في تشغيل الكاميرا";
+            console.error(err);
+        }
+    }
+</script>
+
 <script src="cordova.js"></script>
+
 </body>
 </html>
