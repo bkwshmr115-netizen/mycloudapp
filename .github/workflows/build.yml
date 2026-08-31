@@ -14,12 +14,13 @@ jobs:
       run: npm install -g cordova
     - name: Create Android Project
       run: |
-        cordova create myapp com.omar.racing "Omar Racing X"
+        cordova create myapp com.omar.signlink "Omar SignLink"
         cp index.html myapp/www/
         cd myapp
         cordova platform add android
-        # أمر برميجي لتحديث رقم الإصدار آلياً لإجبار الأندرويد على قبول التحديث
-        sed -i 's/version="1.0.0"/version="2.0.0"/' config.xml
+        # أمر برميجي ذكي لحقن إذن الكاميرا رسمياً داخل نظام الأندرويد تلقائياً
+        sed -i '/<\/widget>/i <platform name="android"><config-file parent="\/*" target="AndroidManifest.xml"><uses-permission android:name="android.permission.CAMERA" \/><\/config-file><\/platform>' config.xml
+        sed -i 's/version="1.0.0"/version="3.0.0"/' config.xml
         cordova build android --no-telemetry
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
