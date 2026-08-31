@@ -88,13 +88,8 @@
             statusEl.style.borderColor = "#00ffcc";
             statusEl.style.color = "#00ffcc";
 
-            const landmarks = results.multiHandLandmarks[0]; // قراءة اليد الأولى
-
-            // رسم هيكل اليد والنقاط الملونة
-            drawConnectors(ctx, landmarks, HAND_CONNECTIONS, {color: '#00ffcc', lineWidth: 4});
-            drawLandmarks(ctx, landmarks, {color: '#ff0055', lineWidth: 1, radius: 3});
-
-            // 1. دالة فحص إذا كان الإصبع مفروداً (مقارنة طرف الإصبع بالمفصل السفلي)
+            const landmarks = results.multiHandLandmarks[0]; // قراءة اليد الأولى     
+           // 1. دالة فحص إذا كان الإصبع مفروداً (مقارنة طرف الإصبع بالمفصل السفلي)
             const isFingerRaised = (tip, pip) => landmarks[tip].y < landmarks[pip].y;
 
             // 2. فحص حالة الأصابع الأربعة الأساسية
