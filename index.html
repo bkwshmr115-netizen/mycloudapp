@@ -3,18 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Omar SignLink - Real Hand Tracking</title>
+    <title>Omar SignLink</title>
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
-        body, html { width:100%; height:100%; background:#0a0a1a; font-family: system-ui, -apple-system, sans-serif; overflow: hidden; }
-        #header { background:linear-gradient(90deg, #0f172a, #1e293b); padding: 15px; text-align: center; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        #header h1 { font-size:20px; color:#00ffcc; margin:0; text-transform: uppercase; letter-spacing: 2px; }
-        #subtitle { font-size:11px; color:#94a3b8; margin-top:5px; }
-        #container { position:relative; width:100%; height:calc(100% - 170px); display: flex; justify-content: center; align-items: center; background: #000; }
-        video { position:absolute; top:0; left:0; width:100%; height:100%; object-fit: cover; transform: scaleX(-1); /* مرآة */ }
-        #status { position:absolute; top:12px; left:50%; transform: translateX(-50%); background: rgba(0,0,0,0.75); color: #00ffcc; padding: 8px 18px; border-radius: 20px; font-size: 13px; border: 1px solid #00ffcc; z-index: 10; white-space: nowrap; }
-        #result { height:90px; background:#0f172a; display:flex; flex-direction: column; justify-content: center; align-items: center; border-top: 2px solid #1e293b; }
-        #translated { font-size:26px; font-weight:bold; color:#00ffcc; margin-bottom: 6px; }
+        body, html { width:100%; height:100%; background:#0a0a1a; font-family: system-ui, sans-serif; overflow:hidden; }
+        #header { background:linear-gradient(90deg,#0f172a,#1e293b); padding:14px; text-align:center; color:white; }
+        #header h1 { font-size:20px; color:#00ffcc; margin:0; letter-spacing:1px; }
+        #subtitle { font-size:11px; color:#94a3b8; margin-top:4px; }
+        #container { position:relative; width:100%; height:calc(100% - 180px); background:#000; }
+        video { position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; }
+        #status { position:absolute; top:12px; left:50%; transform:translateX(-50%); 
+                  background:rgba(0,0,0,0.8); color:#00ffcc; padding:8px 16px; 
+                  border-radius:20px; font-size:13px; border:1px solid #00ffcc; z-index:20; 
+                  white-space:nowrap; max-width:90%; text-align:center; }
+        #switchBtn { position:absolute; bottom:20px; right:20px; z-index:20;
+                     background:#00ffcc; color:#0a0a1a; border:none; border-radius:50%;
+                     width:52px; height:52px; font-size:22px; font-weight:bold;
+                     box-shadow:0 4px 12px rgba(0,255,204,0.4); }
+        #result { height:100px; background:#0f172a; display:flex; flex-direction:column; 
+                  justify-content:center; align-items:center; border-top:2px solid #1e293b; }
+        #translated { font-size:26px; font-weight:bold; color:#00ffcc; margin-bottom:6px; }
         #info { font-size:13px; color:#94a3b8; }
     </style>
 </head>
@@ -27,7 +35,8 @@
 
 <div id="container">
     <video id="video" autoplay playsinline muted></video>
-    <div id="status">جاري تحميل نموذج الذكاء الاصطناعي...</div>
+    <div id="status">جاري التحميل...</div>
+    <button id="switchBtn" title="تبديل الكاميرا">🔄</button>
 </div>
 
 <div id="result">
@@ -35,7 +44,7 @@
     <div id="info">التتبع الحقيقي يعمل الآن</div>
 </div>
 
-<!-- MediaPipe CDN الصحيح -->
+<!-- MediaPipe -->
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
 
@@ -43,64 +52,49 @@
     const video = document.getElementById('video');
     const statusEl = document.getElementById('status');
     const translatedEl = document.getElementById('translated');
+    const switchBtn = document.getElementById('switchBtn');
 
     let lastGesture = "";
     let isSpeaking = false;
+    let currentFacingMode = 'user'; // أمامية
+    let currentStream = null;
+    let camera = null;
+    let hands = null;
 
-    // محرك النطق الصوتي العربي
-    function speak(text) {
-        if (!('speechSynthesis' in window) || isSpeaking) return;
-        
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'ar-SA';
-        utterance.rate = 0.9;
-        
-        isSpeaking = true;
-        utterance.onend = () => { isSpeaking = false; };
-        utterance.onerror = () => { isSpeaking = false; };
-        
-        window.speechSynthesis.speak(utterance);
+    function setStatus(text, isError = false) {
+        statusEl.innerText = text;
+        statusEl.style.borderColor = isError ? "#ff4444" : "#00ffcc";
+        statusEl.style.color = isError ? "#ff4444" : "#00ffcc";
     }
 
-    // تهيئة MediaPipe Hands
-    const hands = new Hands({
-        locateFile: (file) => {
-            return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
-        }
-    });
+    function speak(text) {
+        if (!('speechSynthesis' in window) || isSpeaking) return;
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = 'ar-SA';
+        u.rate = 0.9;
+        isSpeaking = true;
+        u.onend = u.onerror = () => isSpeaking = false;
+        window.speechSynthesis.speak(u);
+    }
 
-    hands.setOptions({
-        maxNumHands: 1,
-        modelComplexity: 1,
-        minDetectionConfidence: 0.7,
-        minTrackingConfidence: 0.6
-    });
-
-    hands.onResults(onResults);
+    function isFingerRaised(landmarks, tip, pip) {
+        return landmarks[tip].y < landmarks[pip].y;
+    }
 
     function onResults(results) {
         if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-            statusEl.innerText = "✓ الإشارة نشطة";
-            statusEl.style.borderColor = "#00ffcc";
-            statusEl.style.color = "#00ffcc";
+            setStatus("✓ الإشارة نشطة");
 
             const landmarks = results.multiHandLandmarks[0];
 
-            // فحص الأصابع المرفوعة (tip أعلى من pip)
-            const isFingerRaised = (tip, pip) => landmarks[tip].y < landmarks[pip].y;
-
-            const indexRaised  = isFingerRaised(8, 6);   // السبابة
-            const middleRaised = isFingerRaised(12, 10); // الوسطى
-            const ringRaised   = isFingerRaised(16, 14); // البنصر
-            const pinkyRaised  = isFingerRaised(20, 18); // الخنصر
-
-            // الإبهام (مقارنة أفقية لأنه يختلف)
-            const thumbRaised = landmarks[4].x < landmarks[3].x; // تقريبي لليد اليمنى في المرآة
+            const indexRaised  = isFingerRaised(landmarks, 8, 6);
+            const middleRaised = isFingerRaised(landmarks, 12, 10);
+            const ringRaised   = isFingerRaised(landmarks, 16, 14);
+            const pinkyRaised  = isFingerRaised(landmarks, 20, 18);
 
             let currentGesture = null;
 
-            // شروط الإشارات
             if (indexRaised && middleRaised && ringRaised && pinkyRaised) {
                 currentGesture = "مرحباً";
             } else if (indexRaised && middleRaised && !ringRaised && !pinkyRaised) {
@@ -111,81 +105,122 @@
                 currentGesture = "نعم / موافق";
             }
 
-            // تحديث الواجهة + نطق عند تغيير الإشارة فقط
             if (currentGesture && currentGesture !== lastGesture) {
                 lastGesture = currentGesture;
                 translatedEl.innerText = currentGesture;
                 speak(currentGesture);
             }
         } else {
-            statusEl.innerText = "ابحث عن يد...";
-            statusEl.style.borderColor = "#94a3b8";
-            statusEl.style.color = "#94a3b8";
+            setStatus("ابحث عن يد...");
             lastGesture = "";
         }
     }
 
-    // تشغيل الكاميرا
-    async function start() {
+    async function stopCamera() {
+        if (camera) {
+            try { camera.stop(); } catch(e) {}
+            camera = null;
+        }
+        if (currentStream) {
+            currentStream.getTracks().forEach(t => t.stop());
+            currentStream = null;
+        }
+        video.srcObject = null;
+    }
+
+    async function startCamera(facingMode = 'user') {
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({
+            setStatus("جاري تشغيل الكاميرا...");
+
+            // تأكد أن المكتبات موجودة
+            if (typeof Hands === 'undefined' || typeof Camera === 'undefined') {
+                setStatus("فشل تحميل MediaPipe - تحقق من الإنترنت", true);
+                return;
+            }
+
+            await stopCamera();
+
+            const constraints = {
                 video: {
-                    facingMode: 'user',
+                    facingMode: facingMode,
                     width:  { ideal: 640 },
                     height: { ideal: 480 }
                 },
                 audio: false
-            });
-            
-            video.srcObject = stream;
+            };
 
-            const camera = new Camera(video, {
+            currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+            video.srcObject = currentStream;
+            currentFacingMode = facingMode;
+
+            // مرآة فقط للكاميرا الأمامية
+            video.style.transform = (facingMode === 'user') ? 'scaleX(-1)' : 'scaleX(1)';
+
+            // إنشاء Hands مرة واحدة
+            if (!hands) {
+                hands = new Hands({
+                    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+                });
+                hands.setOptions({
+                    maxNumHands: 1,
+                    modelComplexity: 1,
+                    minDetectionConfidence: 0.7,
+                    minTrackingConfidence: 0.6
+                });
+                hands.onResults(onResults);
+            }
+
+            camera = new Camera(video, {
                 onFrame: async () => {
-                    await hands.send({ image: video });
+                    if (hands) await hands.send({ image: video });
                 },
                 width: 640,
                 height: 480
             });
-            
             camera.start();
-            statusEl.innerText = "جاهز - ضع يدك أمام الكاميرا";
+
+            setStatus(facingMode === 'user' ? "كاميرا أمامية - جاهز" : "كاميرا خلفية - جاهز");
         } catch (err) {
             console.error(err);
-            statusEl.innerText = "خطأ في تشغيل الكاميرا - تأكد من الصلاحيات";
-            statusEl.style.borderColor = "#ff4444";
-            statusEl.style.color = "#ff4444";
+            setStatus("خطأ في الكاميرا: " + (err.message || "تحقق من الصلاحيات"), true);
         }
     }
 
-    // دعم Cordova (إن وُجد)
-    document.addEventListener('deviceready', () => {
-        if (window.cordova?.plugins?.permissions) {
+    // زر تبديل الكاميرا
+    switchBtn.addEventListener('click', async () => {
+        const newMode = currentFacingMode === 'user' ? 'environment' : 'user';
+        await startCamera(newMode);
+    });
+
+    // التشغيل عند الجاهزية
+    function init() {
+        // Cordova
+        if (window.cordova && cordova.plugins && cordova.plugins.permissions) {
             const permissions = cordova.plugins.permissions;
             permissions.requestPermission(permissions.CAMERA, (status) => {
                 if (status.hasPermission) {
-                    start();
+                    startCamera('user');
                 } else {
-                    statusEl.innerText = "يرجى منح صلاحية الكاميرا";
+                    setStatus("يرجى منح صلاحية الكاميرا من الإعدادات", true);
                 }
-            }, () => {
-                statusEl.innerText = "خطأ في طلب الصلاحية";
-            });
+            }, () => setStatus("فشل طلب الصلاحية", true));
         } else {
-            start();
+            // متصفح عادي
+            startCamera('user');
         }
-    }, false);
-
-    // تشغيل عادي في المتصفح
-    if (!window.cordova) {
-        // انتظر قليلاً حتى تُحمّل المكتبات
-        window.addEventListener('load', () => {
-            setTimeout(start, 300);
-        });
     }
+
+    // انتظر تحميل المكتبات قليلاً
+    window.addEventListener('load', () => {
+        setTimeout(init, 600);
+    });
+
+    document.addEventListener('deviceready', () => {
+        setTimeout(init, 400);
+    }, false);
 </script>
 
-<!-- Cordova (يُستخدم فقط داخل تطبيق Cordova) -->
 <script src="cordova.js"></script>
-
 </body>
 </html>
+
