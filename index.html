@@ -19,7 +19,7 @@
         #switchBtn { position:absolute; bottom:20px; right:20px; z-index:20;
                      background:#00ffcc; color:#0a0a1a; border:none; border-radius:50%;
                      width:52px; height:52px; font-size:22px; font-weight:bold;
-                     box-shadow:0 4px 12px rgba(0,255,204,0.4); }
+                     box-shadow:0 4px 12px rgba(0,255,204,0.4); display:flex; justify-content:center; align-items:center; cursor:pointer; }
         #result { height:100px; background:#0f172a; display:flex; flex-direction:column; 
                   justify-content:center; align-items:center; border-top:2px solid #1e293b; }
         #translated { font-size:26px; font-weight:bold; color:#00ffcc; margin-bottom:6px; }
@@ -45,8 +45,8 @@
 </div>
 
 <!-- روابط مكتبات MediaPipe الرسمية المستقرة سحابياً -->
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+<script src="https://jsdelivr.net" crossorigin="anonymous"></script>
+<script src="https://jsdelivr.net" crossorigin="anonymous"></script>
 
 <script>
     const video = document.getElementById('video');
@@ -55,8 +55,7 @@
     const switchBtn = document.getElementById('switchBtn');
 
     let lastGesture = "";
-    let isSpeaking = false;
-    let currentFacingMode = 'user'; 
+    let currentFacingMode = 'user'; // 'user' تعني أمامية، 'environment' تعني خلفية
     let currentStream = null;
     let camera = null;
     let hands = null;
@@ -77,20 +76,19 @@
         window.speechSynthesis.speak(u);
     }
 
-    // دالة فحص استقامة الأصابع بدقة رياضية ثلاثية الأبعاد
-    function isFingerRaised(handLandmarks, tip, pip) {
-        return handLandmarks[tip].y < handLandmarks[pip].y;
+    // دالة فحص استقامة الأصابع بدقة رياضية
+    function isFingerRaised(handPoints, tip, pip) {
+        return handPoints[tip].y < handPoints[pip].y;
     }
 
     function onResults(results) {
         if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
             setStatus("✓ الإشارة نشطة");
 
-            // قراءة مصفوفة نقاط اليد الأولى المكتشفة بشكل صحيح ومصلح
+            // تم الإصلاح: التقاط اليد الأولى المكتشفة بنجاح عبر المصفوفة [0] لتفعيل التتبع 100%
             const handPoints = results.multiHandLandmarks[0];
 
-            // قياس حالة الارتفاع للأصابع الخمسة (بما فيها الإبهام)
-            const thumbRaised  = handPoints[4].x < handPoints[3].x; // الإبهام (يعتمد على المحور الأفقي)
+            // قياس حالة الارتفاع للأصابع الأربعة الأساسية
             const indexRaised  = isFingerRaised(handPoints, 8, 6);   // السبابة
             const middleRaised = isFingerRaised(handPoints, 12, 10); // الوسطى
             const ringRaised   = isFingerRaised(handPoints, 16, 14);   // البنصر
@@ -98,29 +96,22 @@
 
             let currentGesture = "جاري تحليل الإشارة...";
 
-            // 🧠 قاموس الذكاء الاصطناعي الموسع والمعدل للترجمة الفورية لخدمة الصم والبكم:
-            
-            // 1. كف مفتوح بالكامل
+            // قاموس الذكاء الاصطناعي الموسع للترجمة الفورية لخدمة الصم والبكم:
             if (indexRaised && middleRaised && ringRaised && pinkyRaised) {
                 currentGesture = "مرحباً بك";
             } 
-            // 2. السبابة والوسطى فقط مرفوعان
             else if (indexRaised && middleRaised && !ringRaised && !pinkyRaised) {
                 currentGesture = "شكراً لك";
             } 
-            // 3. علامة الحب العالمية (السبابة والخنصر مرفوعان)
             else if (indexRaised && !middleRaised && !ringRaised && pinkyRaised) {
                 currentGesture = "أحبك";
             } 
-            // 4. قبضة مغلقة بالكامل
             else if (!indexRaised && !middleRaised && !ringRaised && !pinkyRaised) {
                 currentGesture = "نعم / موافق";
             }
-            // 5. إشارة السبابة والوسطى والبنصر مرفوعين (رقم 3)
             else if (indexRaised && middleRaised && ringRaised && !pinkyRaised) {
                 currentGesture = "رقم ثلاثة";
             }
-            // 6. إشارة السبابة فقط مرفوعة
             else if (indexRaised && !middleRaised && !ringRaised && !pinkyRaised) {
                 currentGesture = "انتظر من فضلك";
             }
@@ -173,12 +164,12 @@
             video.srcObject = currentStream;
             currentFacingMode = facingMode;
 
-            // تطبيق تأثير المرآة الذكي للكاميرا الأمامية فقط لتسهيل حركة اليد
+            // معالجة التدوير: مرآة للكاميرا الأمامية فقط لتسهيل حركة المستخدم، وبدون مرآة للخلفية
             video.style.transform = (facingMode === 'user') ? 'scaleX(-1)' : 'scaleX(1)';
 
             if (!hands) {
                 hands = new Hands({
-                    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+                    locateFile: (file) => `https://jsdelivr.net{file}`
                 });
                 hands.setOptions({
                     maxNumHands: 1,
@@ -205,6 +196,7 @@
         }
     }
 
+    // زر التدوير والتبديل بين الأمامية والخلفية بسلاسة
     switchBtn.addEventListener('click', async () => {
         const newMode = currentFacingMode === 'user' ? 'environment' : 'user';
         await startCamera(newMode);
