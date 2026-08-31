@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="com.omar.signlink" version="1.0.0" xmlns="http://w3.org" xmlns:cdv="http://apache.org">
+    <name>Omar SignLink</name>
+    <description>Real Hand Tracking with MediaPipe</description>
+    <author email="dev@omar.com" href="http://omar.com">Omar Dev</author>
+    <content src="index.html" />
+    <access origin="*" />
+    <allow-intent href="http://*/*" />
+    <allow-intent href="https://*/*" />
+    
+    <platform name="android">
+        <!-- حقن إذن الكاميرا رسمياً داخل نظام الأندرويد -->
+        <config-file target="AndroidManifest.xml" parent="/*">
+            <uses-permission android:name="android.permission.CAMERA" />
+        </config-file>
+    </platform>
+</widget>
