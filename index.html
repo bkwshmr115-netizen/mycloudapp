@@ -12,7 +12,7 @@
         #header h1 { font-size:20px; color:#00ffcc; margin:0; text-transform: uppercase; letter-spacing: 2px; }
         #subtitle { font-size:11px; color:#94a3b8; margin-top:5px; }
         #container { position:relative; width:100%; height:calc(100% - 170px); display: flex; justify-content: center; align-items: center; }
-        video, canvas { position:absolute; top:0; left:0; width:100%; height:100%; object-fit: cover; }
+        video { position:absolute; top:0; left:0; width:100%; height:100%; object-fit: cover; }
         #status { position:absolute; top:10px; left:50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); color: #00ffcc; padding: 8px 15px; border-radius: 20px; font-size: 12px; border: 1px solid #00ffcc; z-index: 10; }
         #result { height:90px; background:#0f172a; display:flex; flex-direction: column; justify-content: center; align-items: center; border-top: 2px solid #1e293b; }
         #translated { font-size:24px; font-weight:bold; color:#00ffcc; margin-bottom: 5px; }
@@ -28,7 +28,6 @@
 
 <div id="container">
     <video id="video" autoplay playsinline muted></video>
-    <canvas id="canvas"></canvas>
     <div id="status">جاري تحميل نموذج الذكاء الاصطناعي...</div>
 </div>
 
@@ -37,25 +36,21 @@
     <div id="info">التتبع الحقيقي يعمل الآن</div>
 </div>
 
-<!-- استدعاء مكتبات MediaPipe الرسمية السحابية -->
-<script src="https://jsdelivr.net" crossorigin="anonymous"></script>
-<script src="https://jsdelivr.net" crossorigin="anonymous"></script>
+<!-- استدعاء مكتبات MediaPipe الرسمية للذكاء الاصطناعي -->
 <script src="https://jsdelivr.net" crossorigin="anonymous"></script>
 <script src="https://jsdelivr.net" crossorigin="anonymous"></script>
 
 <script>
     const video = document.getElementById('video');
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
     const statusEl = document.getElementById('status');
     const translatedEl = document.getElementById('translated');
 
     let lastGesture = "";
 
-    // دالة النطق الصوتي العربي للكلمات المترجمة
+    // محرك النطق الصوتي العربي
     function speak(text) {
         if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel(); // إيقاف أي نطق سابق فوراً
+            window.speechSynthesis.cancel(); 
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'ar-SA';
             window.speechSynthesis.speak(utterance);
@@ -76,23 +71,16 @@
     hands.onResults(onResults);
 
     function onResults(results) {
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-
-        ctx.save();
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
-
         if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
             statusEl.innerText = "✓ الإشارة نشطة";
             statusEl.style.borderColor = "#00ffcc";
             statusEl.style.color = "#00ffcc";
 
-            const landmarks = results.multiHandLandmarks[0]; // قراءة اليد الأولى     
-           // 1. دالة فحص إذا كان الإصبع مفروداً (مقارنة طرف الإصبع بالمفصل السفلي)
+            const landmarks = results.multiHandLandmarks[0]; // قراءة نقاط اليد الأولى المعروضة
+
+            // دالة ذكية لفحص الأصابع المفرودة
             const isFingerRaised = (tip, pip) => landmarks[tip].y < landmarks[pip].y;
 
-            // 2. فحص حالة الأصابع الأربعة الأساسية
             const indexRaised  = isFingerRaised(8, 6);   // السبابة
             const middleRaised = isFingerRaised(12, 10); // الوسطى
             const ringRaised   = isFingerRaised(16, 14);   // البنصر
@@ -100,7 +88,7 @@
 
             let currentGesture = "جاري تحليل الإشارة...";
 
-            // 3. شروط التعرف الذكي على الكلمات المترجمة
+            // شروط ترجمة لغة الإشارة الفورية
             if (indexRaised && middleRaised && ringRaised && pinkyRaised) {
                 currentGesture = "مرحباً";
             } else if (indexRaised && middleRaised && !ringRaised && !pinkyRaised) {
@@ -111,7 +99,7 @@
                 currentGesture = "نعم / موافق";
             }
 
-            // 4. تحديث النص المترجم على الشاشة ونطقه صوتياً فوراً دون تكرار
+            // تحديث الواجهة وتفعيل النطق الصوتي عند تغير الإشارة
             if (currentGesture !== lastGesture && currentGesture !== "جاري تحليل الإشارة...") {
                 lastGesture = currentGesture;
                 translatedEl.innerText = currentGesture;
@@ -122,21 +110,25 @@
             statusEl.style.borderColor = "#94a3b8";
             statusEl.style.color = "#94a3b8";
         }
-        ctx.restore();
     }
 
-    // تشغيل الكاميرا بعد أخذ الإذن التفاعلي من كوردوفا
+    // تهيئة صلاحيات نظام أندرويد عبر Cordova وتأكيد تشغيل الكاميرا
     document.addEventListener('deviceready', () => {
-        var permissions = cordova.plugins.permissions;
-        permissions.requestPermission(permissions.CAMERA, (status) => {
-            if (status.hasPermission) {
-                start(); 
-            } else {
-                statusEl.innerText = "يرجى منح صلاحية الكاميرا";
-            }
-        }, () => {
-            statusEl.innerText = "خطأ في طلب الصلاحية";
-        });
+        if (window.cordova && cordova.plugins && cordova.plugins.permissions) {
+            var permissions = cordova.plugins.permissions;
+            permissions.requestPermission(permissions.CAMERA, (status) => {
+                if (status.hasPermission) {
+                    start(); 
+                } else {
+                    statusEl.innerText = "يرجى منح صلاحية الكاميرا";
+                }
+            }, () => {
+                statusEl.innerText = "خطأ في طلب الصلاحية";
+            });
+        } else {
+            // تشغيل احتياطي في حال الفحص التجريبي
+            start();
+        }
     }, false);
 
     async function start() {
