@@ -3,29 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>OmarShield X - Sound Edition</title>
+    <title>Omar Real Racing X</title>
     <style>
-        body, html { margin: 0; padding: 0; overflow: hidden; background: #020208; font-family: 'Segoe UI', sans-serif; user-select: none; }
+        body, html { margin: 0; padding: 0; overflow: hidden; background: #000; font-family: 'Segoe UI', sans-serif; user-select: none; color: white; }
         canvas { display: block; }
-        #hud { position: absolute; top: 15px; left: 15px; right: 15px; display: flex; justify-content: space-between; color: #00ffcc; font-size: 18px; font-weight: bold; text-shadow: 0 0 10px #00ffcc; pointer-events: none; }
-        #ai-hud { color: #ffaa00; text-shadow: 0 0 10px #ffaa00; }
-        #game-over-screen { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: white; background: rgba(5, 5, 20, 0.85); padding: 30px; border-radius: 15px; border: 2px solid #ff0055; box-shadow: 0 0 30px rgba(255, 0, 85, 0.5); }
-        #game-over-screen h1 { color: #ff0055; font-size: 35px; text-shadow: 0 0 15px #ff0055; margin: 0 0 10px 0; }
-        #winner-msg { font-size: 20px; color: #00ffcc; margin-bottom: 20px; font-weight: bold; }
-        #btn-restart { background: #00ffcc; color: black; border: none; padding: 12px 35px; font-size: 18px; font-weight: bold; border-radius: 8px; cursor: pointer; box-shadow: 0 0 15px #00ffcc; }
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; padding: 15px; box-sizing: border-box; }
+        .hud-text { color: #00ffcc; font-size: 20px; font-weight: bold; text-shadow: 0 0 10px #00ffcc; }
+        #controls { position: absolute; bottom: 20px; width: 100%; display: flex; justify-content: space-around; pointer-events: auto; }
+        .btn { background: rgba(0, 255, 204, 0.3); border: 2px solid #00ffcc; color: white; width: 70px; height: 70px; border-radius: 50%; font-size: 24px; font-weight: bold; outline: none; box-shadow: 0 0 15px #00ffcc; }
+        #shop-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5, 5, 20, 0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: auto; }
+        .shop-btn { background: #00ffcc; color: black; border: none; padding: 12px 30px; font-size: 18px; font-weight: bold; border-radius: 8px; margin: 10px; cursor: pointer; box-shadow: 0 0 15px #00ffcc; }
     </style>
 </head>
 <body>
 
-    <div id="hud">
-        <div>OMAR (YOU): <span id="score">0</span></div>
-        <div id="ai-hud">BOT (COMPETITOR): <span id="ai-score">0</span></div>
+    <div id="shop-screen">
+        <h1 style="color: #00ffcc; text-shadow: 0 0 15px #00ffcc; font-size: 35px;">OMAR RACING GARAGE</h1>
+        <p style="font-size: 18px;">Cash: $<span id="shop-cash">0</span></p>
+        <div style="margin: 20px; text-align: center;">
+            <p id="car-status">Current Car: Default Cyan (Speed: 100)</p>
+            <button class="shop-btn" onclick="buyCar('Red Phantom', 200, 140, '#ff0055')">Buy Red Phantom ($200)</button>
+            <button class="shop-btn" onclick="buyCar('Gold Bullet', 500, 180, '#ffaa00')">Buy Gold Bullet ($500)</button>
+        </div>
+        <button class="shop-btn" style="background: #ffffff;" onclick="startRace()">START NEXT RACE 🏁</button>
     </div>
-    
-    <div id="game-over-screen">
-        <h1>BATTLE ENDED</h1>
-        <div id="winner-msg">Calculating Winner...</div>
-        <button id="btn-restart" onclick="restartGame()">PLAY AGAIN</button>
+
+    <div id="ui-layer">
+        <div style="display: flex; justify-content: space-between; width: 100%;">
+            <div class="hud-text">SPEED: <span id="speed">0</span> KM/H</div>
+            <div class="hud-text" style="color: #ffaa00; text-shadow: 0 0 10px #ffaa00;">CASH: $<span id="cash">0</span></div>
+        </div>
+        <div class="hud-text" style="align-self: center; font-size: 24px;" id="track-info">TRACK 1: NEON METROPOLIS</div>
+        <div id="controls">
+            <button class="btn" id="btn-left" ontouchstart="moveLeft=true" ontouchend="moveLeft=false">◀</button>
+            <button class="btn" id="btn-right" ontouchstart="moveRight=true" ontouchend="moveRight=false">▶</button>
+        </div>
     </div>
 
     <canvas id="gameCanvas"></canvas>
@@ -36,236 +48,119 @@
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
-        let score = 0;
-        let aiScore = 0;
-        let gameOver = false;
+        let cash = 0;
+        let currentMaxSpeed = 10;
+        let carColor = '#00ffcc';
+        let speed = 0;
+        let distance = 0;
+        let trackNo = 1;
+        let inRace = false;
 
-        const ship = { x: canvas.width * 0.25, y: canvas.height - 120, width: 50, height: 45 };
-        const aiShip = { x: canvas.width * 0.75, y: canvas.height - 120, width: 50, height: 45, speed: 4.5 };
+        let playerX = 0; 
+        let moveLeft = false;
+        let moveRight = false;
 
-        let lasers = [];
         let enemies = [];
-        let particles = [];
 
-        // --- محرك الصوت الذكي المستقر للهواتف ---
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        const audioCtx = new AudioCtx();
-
-        function playSound(type) {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-
-            if (type === 'laser') {
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.15);
-                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-                gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.15);
-            } else if (type === 'explosion') {
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(150, audioCtx.currentTime);
-                osc.frequency.linearRampToValueAtTime(10, audioCtx.currentTime + 0.2);
-                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-                gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.2);
-            } else if (type === 'boss_explosion') {
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(100, audioCtx.currentTime);
-                osc.frequency.linearRampToValueAtTime(5, audioCtx.currentTime + 0.5);
-                gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
-                gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.5);
-            } else if (type === 'victory') {
-                // نغمة فوز حماسية
-                osc.type = 'sine';
-                const notes = [523, 659, 784, 1046];
-                notes.forEach((freq, idx) => {
-                    osc.frequency.setValueAtTime(freq, audioCtx.currentTime + idx * 0.1);
-                });
-                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-                gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.5);
+        function buyCar(name, cost, newSpeed, color) {
+            if (cash >= cost) {
+                cash -= cost;
+                currentMaxSpeed = newSpeed / 10;
+                carColor = color;
+                document.getElementById("cash").innerText = cash;
+                document.getElementById("shop-cash").innerText = cash;
+                document.getElementById("car-status").innerText = `Current Car: ${name} (Speed: ${newSpeed})`;
+                alert(`🎉 Successfully purchased ${name}!`);
+            } else {
+                alert("❌ Not enough cash! Race more to earn money.");
             }
         }
 
-        window.addEventListener("touchmove", (e) => {
-            if (gameOver) return;
-            const touch = e.touches[0];
-            ship.x = touch.clientX - ship.width / 2;
-            if (ship.x < 0) ship.x = 0;
-            if (ship.x > canvas.width - ship.width) ship.x = canvas.width - ship.width;
-        });
-
-        window.addEventListener("mousemove", (e) => {
-            if (gameOver) return;
-            ship.x = e.clientX - ship.width / 2;
-            if (ship.x < 0) ship.x = 0;
-            if (ship.x > canvas.width - ship.width) ship.x = canvas.width - ship.width;
-        });
-
-        // إطلاق الليزر مع تشغيل الصوت
-        setInterval(() => {
-            if (!gameOver) {
-                lasers.push({ x: ship.x + ship.width / 2 - 3, y: ship.y, width: 6, height: 16, speed: 12, isAI: false });
-                playSound('laser'); // تشغيل صوت الليزر لك
-                lasers.push({ x: aiShip.x + aiShip.width / 2 - 3, y: aiShip.y, width: 6, height: 16, speed: 11, isAI: true });
-            }
-        }, 280);
-
-        setInterval(() => {
-            if (!gameOver) {
-                const rand = Math.random();
-                if (rand < 0.6) {
-                    enemies.push({ x: Math.random() * (canvas.width - 30), y: -30, size: 25, speed: Math.random() * 2 + 3, hp: 1, type: 'regular', color: '#ff0055' });
-                } else if (rand < 0.85) {
-                    enemies.push({ x: Math.random() * (canvas.width - 20), y: -20, size: 18, speed: Math.random() * 2 + 6, hp: 1, type: 'fast', color: '#00ff66' });
-                } else {
-                    enemies.push({ x: Math.random() * (canvas.width - 60), y: -60, size: 55, speed: 1.5, hp: 3, type: 'boss', color: '#b026ff' });
-                }
-            }
-        }, 700);
-
-        function createExplosion(x, y, color) {
-            for (let i = 0; i < 12; i++) {
-                particles.push({
-                    x: x, y: y,
-                    vx: (Math.random() - 0.5) * 6,
-                    vy: (Math.random() - 0.5) * 6,
-                    radius: Math.random() * 3 + 1,
-                    alpha: 1,
-                    color: color
-                });
-            }
-        }
-
-        function restartGame() {
-            score = 0; aiScore = 0; lasers = []; enemies = []; particles = []; gameOver = false;
-            document.getElementById("score").innerText = score;
-            document.getElementById("ai-score").innerText = aiScore;
-            document.getElementById("game-over-screen").style.display = "none";
+        function startRace() {
+            document.getElementById("shop-screen").style.display = "none";
+            inRace = true;
+            speed = 0;
+            distance = 0;
+            enemies = [
+                { routeX: -0.5, y: canvas.height / 2, speed: 4, color: '#ff0055' },
+                { routeX: 0.5, y: canvas.height / 3, speed: 5, color: '#ffaa00' }
+            ];
             update();
         }
 
-        function drawSpaceship(x, y, color, isPlayer) {
-            ctx.fillStyle = color;
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = color;
+        function update() {
+            if (!inRace) return;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 1. Draw Simulated pseudo-3D Horizon
+            ctx.fillStyle = '#07071c';
+            ctx.fillRect(0, 0, canvas.width, canvas.height / 2);
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(0, canvas.height / 2, canvas.width, canvas.height / 2);
+
+            // 2. Draw 3D Perspective Road lines
+            let horizonY = canvas.height / 2;
+            ctx.fillStyle = '#1e293b';
             ctx.beginPath();
-            ctx.moveTo(x, y + 40);
-            ctx.lineTo(x + 25, y);
-            ctx.lineTo(x + 50, y + 40);
-            ctx.lineTo(x + 35, y + 30);
-            ctx.lineTo(x + 15, y + 30);
+            ctx.moveTo(canvas.width / 2 - 40, horizonY);
+            ctx.lineTo(canvas.width / 2 + 40, horizonY);
+            ctx.lineTo(canvas.width - 50, canvas.height);
+            ctx.lineTo(50, canvas.height);
             ctx.closePath();
             ctx.fill();
-            ctx.fillStyle = isPlayer ? '#38bdf8' : '#ff7700';
-            ctx.fillRect(x + 20, y + 40, 10, Math.random() * 12 + 5);
-            ctx.shadowBlur = 0;
-        }
 
-        function update() {
-            if (gameOver) return;
+            // Handle Input controls
+            if (moveLeft) playerX -= 0.05;
+            if (moveRight) playerX += 0.05;
+            if (speed < currentMaxSpeed) speed += 0.1;
 
-            ctx.fillStyle = "rgba(2, 2, 8, 0.3)";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            distance += speed;
+            document.getElementById("speed").innerText = Math.round(speed * 20);
 
-            if (enemies.length > 0) {
-                let target = enemies[0];
-                for (let e of enemies) { if (e.y > target.y) target = e; }
-                let targetX = target.x + target.size / 2 - aiShip.width / 2;
-                if (aiShip.x < targetX) aiShip.x += aiShip.speed;
-                if (aiShip.x > targetX) aiShip.x -= aiShip.speed;
-            }
-
-            drawSpaceship(ship.x, ship.y, '#00ffcc', true);
-            drawSpaceship(aiShip.x, aiShip.y, '#ffaa00', false);
-
-            for (let i = lasers.length - 1; i >= 0; i--) {
-                lasers[i].y -= lasers[i].speed;
-                ctx.fillStyle = lasers[i].isAI ? '#ffaa00' : '#00ffcc';
-                ctx.fillRect(lasers[i].x, lasers[i].y, lasers[i].width, lasers[i].height);
-                if (lasers[i].y < 0) lasers.splice(i, 1);
-            }
-
-            for (let i = enemies.length - 1; i >= 0; i--) {
-                enemies[i].y += enemies[i].speed;
+            // Draw & Update AI Competitors
+            enemies.forEach((enemy) => {
+                enemy.y += (speed - enemy.speed);
+                if (enemy.y > canvas.height) {
+                    enemy.y = horizonY;
+                    enemy.routeX = (Math.random() - 0.5) * 1.2;
+                }
                 
-                ctx.fillStyle = enemies[i].color;
-                ctx.shadowBlur = 12;
-                ctx.shadowColor = enemies[i].color;
-                ctx.beginPath();
-                ctx.arc(enemies[i].x + enemies[i].size/2, enemies[i].y + enemies[i].size/2, enemies[i].size/2, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.shadowBlur = 0;
-
-                if (enemies[i].y > canvas.height) {
-                    gameOver = true;
-                    let winMsg = score > aiScore ? "🎉 OMAR WINS THE MATCH!" : "🤖 BOT BEAT YOUR SCORE!";
-                    if(score === aiScore) winMsg = "🤝 IT'S A TIE BATTLE!";
-                    
-                    if(score > aiScore) playSound('victory'); // تشغيل موسيقى النصر لعمر
-                    
-                    document.getElementById("winner-msg").innerText = winMsg;
-                    document.getElementById("game-over-screen").style.display = "block";
-                    return;
+                // Real Perspective Calculations
+                let scale = (enemy.y - horizonY) / horizonY;
+                if(scale > 0) {
+                    let enemyX = (canvas.width / 2) + (enemy.routeX * canvas.width / 2 * scale);
+                    ctx.fillStyle = enemy.color;
+                    ctx.fillRect(enemyX - (25 * scale), enemy.y, 50 * scale, 30 * scale);
                 }
+            });
 
-                for (let j = lasers.length - 1; j >= 0; j--) {
-                    const l = lasers[j];
-                    if (l.x < enemies[i].x + enemies[i].size &&
-                        l.x + l.width > enemies[i].x &&
-                        l.y < enemies[i].y + enemies[i].size &&
-                        l.y + l.height > enemies[i].y) {
+            // Draw Omar's Car (Bottom Center)
+            let myCarX = (canvas.width / 2) + (playerX * canvas.width / 2) - 40;
+            ctx.fillStyle = carColor;
+            ctx.shadowBlur = 15; ctx.shadowColor = carColor;
+            ctx.fillRect(myCarX, canvas.height - 150, 80, 45); // Body
+            ctx.fillStyle = '#000';
+            ctx.fillRect(myCarX - 10, canvas.height - 140, 10, 25); // Tires
+            ctx.fillRect(myCarX + 80, canvas.height - 140, 10, 25);
+            ctx.shadowBlur = 0;
 
-                        enemies[i].hp--;
-                        lasers.splice(j, 1);
-
-                        if (enemies[i].hp <= 0) {
-                            createExplosion(enemies[i].x + enemies[i].size / 2, enemies[i].y + enemies[i].size / 2, enemies[i].color);
-
-                            if (enemies[i].type === 'boss') {
-                                playSound('boss_explosion');
-                                if (l.isAI) aiScore += 5; else score += 5;
-                            } else {
-                                playSound('explosion');
-                                if (l.isAI) aiScore += 1; else score += 1;
-                            }
-
-                            document.getElementById("score").innerText = score;
-                            document.getElementById("ai-score").innerText = aiScore;
-                            enemies.splice(i, 1);
-                        }
-                        break;
-                    }
-                }
-            }
-
-            for (let i = particles.length - 1; i >= 0; i--) {
-                particles[i].x += particles[i].vx;
-                particles[i].y += particles[i].vy;
-                particles[i].alpha -= 0.03;
-                ctx.globalAlpha = particles[i].alpha;
-                ctx.fillStyle = particles[i].color;
-                ctx.beginPath();
-                ctx.arc(particles[i].x, particles[i].y, particles[i].radius, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.globalAlpha = 1;
-                if (particles[i].alpha <= 0) particles.splice(i, 1);
+            // Track Finish Line system
+            if (distance > 2000) {
+                inRace = false;
+                let prize = trackNo * 150;
+                cash += prize;
+                trackNo++;
+                document.getElementById("cash").innerText = cash;
+                document.getElementById("shop-cash").innerText = cash;
+                document.getElementById("track-info").innerText = `TRACK ${trackNo}: CYBER HIGHWAY`;
+                document.getElementById("shop-screen").style.display = "flex";
+                alert(`🏁 RACE FINISHED! You won $${prize}. Garage unlocked!`);
+                return;
             }
 
             requestAnimationFrame(update);
         }
-
-        update();
     </script>
 </body>
 </html>
