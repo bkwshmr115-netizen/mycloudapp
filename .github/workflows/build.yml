@@ -18,9 +18,10 @@ jobs:
         cp index.html myapp/www/
         cd myapp
         cordova platform add android
-        # أمر برميجي ذكي لحقن إذن الكاميرا رسمياً داخل نظام الأندرويد تلقائياً
-        sed -i '/<\/widget>/i <platform name="android"><config-file parent="\/*" target="AndroidManifest.xml"><uses-permission android:name="android.permission.CAMERA" \/><\/config-file><\/platform>' config.xml
-        sed -i 's/version="1.0.0"/version="3.0.0"/' config.xml
+        # الأمر الرسمي لدمج وتفعيل إذن الكاميرا سحابياً داخل الأندرويد بدون أخطاء
+        cordova plugin add cordova-plugin-android-permissions --save
+        cordova plugin add cordova-plugin-camera --save
+        sed -i 's/version="1.0.0"/version="4.0.0"/' config.xml
         cordova build android --no-telemetry
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
