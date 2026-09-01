@@ -8,24 +8,23 @@
         * { margin:0; padding:0; box-sizing:border-box; }
         body, html { width:100%; height:100%; background:#070714; font-family: system-ui, sans-serif; overflow:hidden; color: white; }
         #header { background:linear-gradient(90deg,#0f172a,#1e293b); padding:14px; text-align:center; border-bottom: 2px solid #ff3b30; }
-        #header h1 { font-size:20px; color:#ff3b30; margin:0; letter-spacing:1px; }
+        #header h1 { font-size:20px; color:#ff3b30; margin:0; }
         #subtitle { font-size:11px; color:#94a3b8; margin-top:3px; }
-        #disclaimer { font-size:10px; color:#f87171; margin-top:4px; }
-        #container { position:relative; width:100%; height:calc(100% - 280px); background:#000; display:flex; justify-content:center; align-items:center; }
-        video { position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; opacity: 0.15; }
-        #fingerGuide { width: 130px; height: 130px; border: 4px dashed #ff3b30; border-radius: 50%; z-index: 10; display:flex; justify-content:center; align-items:center; flex-direction:column; background:rgba(0,0,0,0.7); box-shadow: 0 0 25px rgba(255,59,48,0.4); }
-        #fingerGuide span { font-size: 11px; text-align:center; padding: 4px; color:#ff3b30; font-weight:bold; }
-        #status { position:absolute; top:10px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.85); color:#ff3b30; padding:7px 14px; border-radius:20px; font-size:12px; border:1px solid #ff3b30; z-index:20; white-space:nowrap; }
-        #resultZone { height:110px; background:#0f172a; display:flex; flex-direction:row; justify-content:space-around; align-items:center; border-top:2px solid #1e293b; padding:8px; }
-        .vitals-box { display:flex; flex-direction:column; align-items:center; justify-content:center; background:#1e293b; padding:10px 8px; border-radius:12px; width:30%; border:1px solid #334155; }
+        #disclaimer { font-size:11px; color:#f87171; margin-top:5px; font-weight:bold; }
+        #container { position:relative; width:100%; height:calc(100% - 290px); background:#000; display:flex; justify-content:center; align-items:center; }
+        video { position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; opacity: 0.18; }
+        #fingerGuide { width: 135px; height: 135px; border: 4px dashed #ff3b30; border-radius: 50%; z-index: 10; display:flex; justify-content:center; align-items:center; flex-direction:column; background:rgba(0,0,0,0.75); box-shadow: 0 0 25px rgba(255,59,48,0.45); }
+        #fingerGuide span { font-size: 12px; text-align:center; padding: 5px; color:#ff3b30; font-weight:bold; }
+        #status { position:absolute; top:12px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.88); color:#ff3b30; padding:8px 16px; border-radius:20px; font-size:13px; border:1px solid #ff3b30; z-index:20; max-width:90%; text-align:center; }
+        #resultZone { height:115px; background:#0f172a; display:flex; flex-direction:row; justify-content:space-around; align-items:center; border-top:2px solid #1e293b; padding:8px; }
+        .vitals-box { display:flex; flex-direction:column; align-items:center; justify-content:center; background:#1e293b; padding:10px 6px; border-radius:12px; width:31%; border:1px solid #334155; }
         .vitals-val { font-size:26px; font-weight:bold; color:#ff3b30; }
-        .vitals-lbl { font-size:10px; color:#94a3b8; margin-top:3px; text-align:center; }
-        #controls { height:90px; background:#0f172a; display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:8px; padding:8px; border-top:1px solid #1e293b; }
-        .btn { border:none; padding:10px 14px; font-size:13px; font-weight:bold; border-radius:20px; cursor:pointer; color:white; min-width:90px; }
+        .vitals-lbl { font-size:11px; color:#94a3b8; margin-top:3px; text-align:center; }
+        #controls { height:95px; background:#0f172a; display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:8px; padding:8px; border-top:1px solid #1e293b; }
+        .btn { border:none; padding:11px 15px; font-size:13px; font-weight:bold; border-radius:22px; cursor:pointer; color:white; min-width:95px; }
         #startBtn { background:#ff3b30; }
         #flashBtn { background:#3b82f6; }
         #resetBtn { background:#64748b; }
-        #saveBtn { background:#10b981; }
         .btn:active { opacity:0.8; }
         #confidenceBar { width:100%; height:6px; background:#1e293b; margin-top:4px; border-radius:3px; overflow:hidden; }
         #confidenceFill { height:100%; width:0%; background:#22c55e; transition:width 0.3s; }
@@ -36,15 +35,15 @@
 <div id="header">
     <h1>OMAR VITALTRACK PRO</h1>
     <div id="subtitle">قياس نبض وتوتر محسّن بالكاميرا + فلاش</div>
-    <div id="disclaimer">⚠️ تقدير تقريبي فقط - ليس جهازاً طبياً معتمداً</div>
+    <div id="disclaimer">⚠️ تقديري فقط - ليس جهازاً طبياً - النتائج غير مضمونة</div>
 </div>
 
 <div id="container">
     <video id="video" autoplay playsinline muted></video>
-    <div id="status">جاهز للفحص...</div>
+    <div id="status">جاهز - اضغط ابدأ بعد تغطية الكاميرا</div>
     <div id="fingerGuide">
-        <span style="font-size:22px;">🩸</span>
-        <span>ضع إصبعك بقوة على الكاميرا</span>
+        <span style="font-size:24px;">🩸</span>
+        <span>ضع إصبعك بقوة<br>على الكاميرا</span>
     </div>
 </div>
 
@@ -68,7 +67,6 @@
     <button id="startBtn" class="btn">ابدأ القياس</button>
     <button id="flashBtn" class="btn">تشغيل الفلاش</button>
     <button id="resetBtn" class="btn">إعادة تعيين</button>
-    <button id="saveBtn" class="btn">حفظ القراءة</button>
 </div>
 
 <script>
@@ -81,7 +79,6 @@
     const startBtn = document.getElementById('startBtn');
     const flashBtn = document.getElementById('flashBtn');
     const resetBtn = document.getElementById('resetBtn');
-    const saveBtn = document.getElementById('saveBtn');
 
     let currentStream = null;
     let animationFrameId = null;
@@ -89,27 +86,26 @@
     let timestamps = [];
     let isMeasuring = false;
     let torchOn = false;
-    let lastBpm = null;
-    let bpmHistory = [];
+    let bpmBuffer = [];
+    let lastValidBpm = null;
+    let stableCount = 0;
 
     function speak(text) {
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
             const u = new SpeechSynthesisUtterance(text);
             u.lang = 'ar-SA';
-            u.rate = 0.95;
+            u.rate = 0.9;
             window.speechSynthesis.speak(u);
         }
     }
 
     async function startVitalsCamera() {
         try {
-            statusEl.innerText = "جاري تشغيل المستشعر...";
-            if (currentStream) {
-                currentStream.getTracks().forEach(track => track.stop());
-            }
+            statusEl.innerText = "جاري تشغيل الكاميرا...";
+            if (currentStream) currentStream.getTracks().forEach(t => t.stop());
 
-            const constraints = {
+            currentStream = await navigator.mediaDevices.getUserMedia({
                 video: {
                     facingMode: 'environment',
                     width: { ideal: 640 },
@@ -117,13 +113,10 @@
                     frameRate: { ideal: 30 }
                 },
                 audio: false
-            };
-
-            currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+            });
             video.srcObject = currentStream;
-            statusEl.innerText = "المستشعر جاهز - ضع إصبعك بقوة";
+            statusEl.innerText = "الكاميرا جاهزة - غطّها بإصبعك ثم اضغط ابدأ";
         } catch (err) {
-            console.error(err);
             statusEl.innerText = "خطأ في تشغيل الكاميرا";
         }
     }
@@ -131,51 +124,41 @@
     async function toggleFlash() {
         if (!currentStream) return;
         const track = currentStream.getVideoTracks()[0];
-        if (!track) return;
-
         try {
-            const capabilities = track.getCapabilities();
-            if (capabilities.torch) {
+            const caps = track.getCapabilities();
+            if (caps.torch) {
                 torchOn = !torchOn;
                 await track.applyConstraints({ advanced: [{ torch: torchOn }] });
                 flashBtn.innerText = torchOn ? "إيقاف الفلاش" : "تشغيل الفلاش";
                 flashBtn.style.background = torchOn ? "#ef4444" : "#3b82f6";
-                statusEl.innerText = torchOn ? "الفلاش مفعل - أفضل للإضاءة الضعيفة" : "تم إيقاف الفلاش";
+                statusEl.innerText = torchOn ? "الفلاش مفعل - أفضل للقياس" : "تم إيقاف الفلاش";
             } else {
-                statusEl.innerText = "هذا الجهاز لا يدعم الفلاش البرمجي";
+                statusEl.innerText = "الجهاز لا يدعم التحكم بالفلاش";
             }
         } catch (e) {
-            statusEl.innerText = "تعذر التحكم في الفلاش";
+            statusEl.innerText = "تعذر تشغيل الفلاش";
         }
     }
 
-    // تحسين الإشارة: تنعيم + إزالة الاتجاه
-    function processSignal(rawValues) {
-        if (rawValues.length < 10) return rawValues;
-
-        // متوسط متحرك بسيط
-        const smoothed = [];
-        const windowSize = 5;
-        for (let i = 0; i < rawValues.length; i++) {
+    function smoothSignal(arr, windowSize = 5) {
+        const result = [];
+        for (let i = 0; i < arr.length; i++) {
             let sum = 0, count = 0;
-            for (let j = Math.max(0, i - windowSize); j <= Math.min(rawValues.length - 1, i + windowSize); j++) {
-                sum += rawValues[j];
+            for (let j = Math.max(0, i - windowSize); j <= Math.min(arr.length - 1, i + windowSize); j++) {
+                sum += arr[j];
                 count++;
             }
-            smoothed.push(sum / count);
+            result.push(sum / count);
         }
-
-        // إزالة الاتجاه (Detrend)
-        const mean = smoothed.reduce((a, b) => a + b, 0) / smoothed.length;
-        return smoothed.map(v => v - mean);
+        return result;
     }
 
-    // كشف القمم مع مسافة دنيا
-    function detectPeaks(signal, minDistance = 8) {
+    function detectPeaks(signal, minDistance = 10) {
         const peaks = [];
-        for (let i = 1; i < signal.length - 1; i++) {
-            if (signal[i] > signal[i - 1] && signal[i] > signal[i + 1] && signal[i] > 0) {
-                if (peaks.length === 0 || (i - peaks[peaks.length - 1]) >= minDistance) {
+        for (let i = 2; i < signal.length - 2; i++) {
+            if (signal[i] > signal[i-1] && signal[i] > signal[i+1] &&
+                signal[i] > signal[i-2] && signal[i] > signal[i+2] && signal[i] > 0) {
+                if (peaks.length === 0 || (i - peaks[peaks.length-1]) >= minDistance) {
                     peaks.push(i);
                 }
             }
@@ -187,70 +170,113 @@
         if (!isMeasuring) return;
 
         const canvas = document.createElement('canvas');
-        canvas.width = 100;
-        canvas.height = 100;
+        canvas.width = 80;
+        canvas.height = 80;
         const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
         try {
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            const data = imgData.data;
+            const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
 
             let rSum = 0;
-            const pixelCount = data.length / 4;
-            for (let i = 0; i < data.length; i += 4) {
-                rSum += data[i]; // القناة الحمراء أهم شيء
-            }
-            const avgRed = rSum / pixelCount;
+            for (let i = 0; i < data.length; i += 4) rSum += data[i];
+            const avgRed = rSum / (data.length / 4);
 
             signalHistory.push(avgRed);
             timestamps.push(timestamp);
 
-            // الاحتفاظ بآخر 4-5 ثوانٍ تقريباً
-            if (signalHistory.length > 150) {
+            if (signalHistory.length > 160) {
                 signalHistory.shift();
                 timestamps.shift();
             }
 
-            if (signalHistory.length > 70) {
-                const processed = processSignal(signalHistory);
-                const peaks = detectPeaks(processed, 7);
+            // ----- كشف وجود إصبع (مهم جداً للصدق) -----
+            const fingerDetected = avgRed > 60 && avgRed < 230; // نطاق تقريبي لما يكون في إصبع
+            if (!fingerDetected) {
+                heartRateEl.innerText = "--";
+                stressLevelEl.innerText = "--";
+                confidenceEl.innerText = "--%";
+                confidenceFill.style.width = "0%";
+                statusEl.innerText = "لم يتم اكتشاف إصبع - غطّ الكاميرا بقوة";
+                stableCount = 0;
+                bpmBuffer = [];
+                animationFrameId = requestAnimationFrame(processVideoFrame);
+                return;
+            }
 
-                // حساب الزمن الحقيقي
-                const durationSec = (timestamps[timestamps.length - 1] - timestamps[0]) / 1000;
-                if (durationSec > 1.5 && peaks.length >= 2) {
-                    const bpm = Math.round((peaks.length / durationSec) * 60);
+            if (signalHistory.length < 80) {
+                statusEl.innerText = "جاري جمع الإشارة... ثبت إصبعك";
+                animationFrameId = requestAnimationFrame(processVideoFrame);
+                return;
+            }
 
-                    // تصفية القيم المنطقية
-                    if (bpm >= 45 && bpm <= 180) {
-                        bpmHistory.push(bpm);
-                        if (bpmHistory.length > 8) bpmHistory.shift();
+            // معالجة الإشارة
+            const smoothed = smoothSignal(signalHistory, 4);
+            const mean = smoothed.reduce((a,b) => a+b, 0) / smoothed.length;
+            const detrended = smoothed.map(v => v - mean);
 
-                        // متوسط متحرك للنتائج
-                        const avgBpm = Math.round(bpmHistory.reduce((a, b) => a + b, 0) / bpmHistory.length);
-                        lastBpm = avgBpm;
-                        heartRateEl.innerText = avgBpm;
+            // قوة الإشارة (مهم)
+            const maxVal = Math.max(...detrended);
+            const minVal = Math.min(...detrended);
+            const amplitude = maxVal - minVal;
 
-                        // تقدير التوتر + HRV بسيط
-                        const variance = bpmHistory.length > 3 ?
-                            bpmHistory.reduce((sum, val) => sum + Math.pow(val - avgBpm, 2), 0) / bpmHistory.length : 0;
+            if (amplitude < 1.8) { // إشارة ضعيفة جداً
+                heartRateEl.innerText = "--";
+                stressLevelEl.innerText = "--";
+                confidenceEl.innerText = "ضعيف";
+                confidenceFill.style.width = "15%";
+                confidenceFill.style.background = "#ef4444";
+                statusEl.innerText = "إشارة ضعيفة - اضغط إصبعك أقوى أو فعّل الفلاش";
+                stableCount = 0;
+                animationFrameId = requestAnimationFrame(processVideoFrame);
+                return;
+            }
 
-                        let stressText = "متزن";
-                        if (avgBpm > 95 || variance > 40) stressText = "مرتفع";
-                        else if (avgBpm > 80) stressText = "متوسط";
-                        stressLevelEl.innerText = stressText;
+            const peaks = detectPeaks(detrended, 9);
+            const durationSec = (timestamps[timestamps.length-1] - timestamps[0]) / 1000;
 
-                        // مؤشر جودة الإشارة (كلما زادت القمم المنتظمة زادت الثقة)
-                        let conf = Math.min(95, Math.round((peaks.length / (durationSec * 1.6)) * 70 + (variance < 25 ? 25 : 10)));
-                        if (avgRed < 40 || avgRed > 240) conf = Math.max(10, conf - 40); // إشارة ضعيفة جداً أو مشبعة
+            if (durationSec > 2.2 && peaks.length >= 3) {
+                const bpm = Math.round((peaks.length / durationSec) * 60);
+
+                // نطاق فسيولوجي فقط
+                if (bpm >= 48 && bpm <= 160) {
+                    bpmBuffer.push(bpm);
+                    if (bpmBuffer.length > 6) bpmBuffer.shift();
+
+                    // حساب الاستقرار
+                    const avg = bpmBuffer.reduce((a,b)=>a+b,0) / bpmBuffer.length;
+                    const variance = bpmBuffer.reduce((s,v)=>s+Math.pow(v-avg,2),0) / bpmBuffer.length;
+
+                    if (variance < 35 && bpmBuffer.length >= 4) {
+                        stableCount++;
+                        const finalBpm = Math.round(avg);
+                        lastValidBpm = finalBpm;
+
+                        heartRateEl.innerText = finalBpm;
+
+                        // توتر بسيط
+                        let stress = "متزن";
+                        if (finalBpm > 92) stress = "مرتفع";
+                        else if (finalBpm > 78) stress = "متوسط";
+                        stressLevelEl.innerText = stress;
+
+                        // جودة الإشارة
+                        let conf = Math.min(92, Math.round(50 + (amplitude * 8) + (stableCount * 3) - (variance * 0.8)));
+                        conf = Math.max(40, conf);
                         confidenceEl.innerText = conf + "%";
                         confidenceFill.style.width = conf + "%";
-                        confidenceFill.style.background = conf > 70 ? "#22c55e" : conf > 40 ? "#eab308" : "#ef4444";
+                        confidenceFill.style.background = conf > 75 ? "#22c55e" : conf > 55 ? "#eab308" : "#ef4444";
 
-                        statusEl.innerText = conf > 50 ? "جاري القياس... ثبت إصبعك" : "إشارة ضعيفة - اضغط أقوى أو فعّل الفلاش";
+                        statusEl.innerText = conf > 70 ? "قراءة مستقرة نسبياً" : "جاري التحسين... ثبت أكثر";
+                    } else {
+                        statusEl.innerText = "الإشارة غير مستقرة - لا تتحرك";
+                        stableCount = Math.max(0, stableCount - 1);
                     }
                 }
+            } else {
+                statusEl.innerText = "جاري التحليل... ثبت إصبعك بدون حركة";
             }
+
         } catch (e) {
             console.error(e);
         }
@@ -263,10 +289,16 @@
             isMeasuring = true;
             signalHistory = [];
             timestamps = [];
-            bpmHistory = [];
+            bpmBuffer = [];
+            stableCount = 0;
+            lastValidBpm = null;
+            heartRateEl.innerText = "--";
+            stressLevelEl.innerText = "--";
+            confidenceEl.innerText = "--%";
+            confidenceFill.style.width = "0%";
             startBtn.innerText = "إيقاف القياس";
             startBtn.style.background = "#dc2626";
-            statusEl.innerText = "جاري جمع الإشارة... ثبت إصبعك 8-12 ثانية";
+            statusEl.innerText = "ابدأ - غطّ الكاميرا بإصبعك بقوة ويفضل الفلاش";
             speak("بدأ القياس. ضع إصبعك بقوة على الكاميرا ويفضل تشغيل الفلاش");
             animationFrameId = requestAnimationFrame(processVideoFrame);
         } else {
@@ -275,9 +307,8 @@
             startBtn.innerText = "ابدأ القياس";
             startBtn.style.background = "#ff3b30";
             statusEl.innerText = "تم إيقاف القياس";
-
-            if (lastBpm) {
-                speak(`معدل نبضك التقريبي ${lastBpm} نبضة في الدقيقة. تذكر أن هذه نتيجة تقديرية فقط`);
+            if (lastValidBpm) {
+                speak(`آخر قراءة مستقرة كانت ${lastValidBpm} نبضة. تذكر أنها تقديرية`);
             }
         }
     });
@@ -289,8 +320,9 @@
         cancelAnimationFrame(animationFrameId);
         signalHistory = [];
         timestamps = [];
-        bpmHistory = [];
-        lastBpm = null;
+        bpmBuffer = [];
+        stableCount = 0;
+        lastValidBpm = null;
         heartRateEl.innerText = "--";
         stressLevelEl.innerText = "--";
         confidenceEl.innerText = "--%";
@@ -300,39 +332,7 @@
         statusEl.innerText = "تم إعادة التعيين";
     });
 
-    saveBtn.addEventListener('click', () => {
-        if (!lastBpm) {
-            statusEl.innerText = "لا توجد قراءة لحفظها";
-            return;
-        }
-        const now = new Date().toLocaleString('ar-SA');
-        const record = `التاريخ: ${now} | النبض: ${lastBpm} | التوتر: ${stressLevelEl.innerText}`;
-        let history = JSON.parse(localStorage.getItem('vitalHistory') || '[]');
-        history.unshift(record);
-        if (history.length > 20) history.pop();
-        localStorage.setItem('vitalHistory', JSON.stringify(history));
-        statusEl.innerText = "تم حفظ القراءة محلياً";
-        speak("تم حفظ القراءة");
-    });
-
-    // تشغيل الكاميرا
-    window.addEventListener('load', () => {
-        setTimeout(startVitalsCamera, 400);
-    });
-
-    document.addEventListener('deviceready', () => {
-        if (window.cordova && cordova.plugins && cordova.plugins.permissions) {
-            cordova.plugins.permissions.requestPermission(
-                cordova.plugins.permissions.CAMERA,
-                (status) => {
-                    if (status.hasPermission) startVitalsCamera();
-                    else statusEl.innerText = "يحتاج صلاحية الكاميرا";
-                }
-            );
-        }
-    }, false);
+    window.addEventListener('load', () => setTimeout(startVitalsCamera, 400));
 </script>
-
-<script src="cordova.js"></script>
 </body>
 </html>
