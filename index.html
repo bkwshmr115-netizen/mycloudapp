@@ -3,192 +3,269 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Omar AirGesture - التحكم السحري</title>
-    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; style-src * 'unsafe-inline'; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src * 'unsafe-inline' 'unsafe-eval'; img-src * data: blob:;">
+    <title>Omar AirGesture - TikTok Style</title>
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
-        body, html { width:100%; height:100%; background:#050510; font-family: system-ui, sans-serif; overflow:hidden; color: white; }
-        #header { background:linear-gradient(90deg,#0f172a,#1e293b); padding:14px; text-align:center; border-bottom: 2px solid #00ffcc; }
-        #header h1 { font-size:20px; color:#00ffcc; margin:0; letter-spacing:1px; }
-        #subtitle { font-size:11px; color:#94a3b8; margin-top:4px; }
+        body, html { width:100%; height:100%; background:#000; font-family: system-ui, sans-serif; overflow:hidden; color:white; touch-action: none; }
         
-        #main-zone { display: flex; flex-direction: column; width: 100%; height: calc(100% - 160px); position: relative; }
+        #header { position:absolute; top:0; left:0; right:0; z-index:100; padding:14px; text-align:center; background:linear-gradient(to bottom, rgba(0,0,0,0.7), transparent); pointer-events:none; }
+        #header h1 { font-size:15px; color:#00ffcc; margin:0; }
         
-        /* شاشة الكاميرا الصغيرة للمعاينة */
-        #camera-preview { position: absolute; top: 10px; left: 10px; width: 100px; height: 130px; border-radius: 8px; border: 2px solid #00ffcc; overflow: hidden; z-index: 30; background: #000; }
-        video { width: 100%; height: 100%; object-fit: cover; }
+        #mainVideo { position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; background:#000; }
         
-        /* معرض الصور البرمي للاختبار */
-        #gallery-container { flex: 1; display: flex; justify-content: center; align-items: center; padding: 20px; position: relative; }
-        .slide { width: 85%; height: 75%; max-width: 400px; border-radius: 15px; border: 3px solid #1e293b; display: none; justify-content: center; align-items: center; font-size: 24px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.5); box-shadow: 0 10px 25px rgba(0,0,0,0.5); background-size: cover; background-position: center; position: relative; }
-        .slide.active { display: flex; border-color: #00ffcc; animation: fadeIn 0.4s; }
-        .slide-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(15,23,42,0.8); padding: 15px; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; text-align: center; font-size: 16px; color: #00ffcc; }
-
-        #status { position:absolute; top:12px; right:10px; background:rgba(0,0,0,0.8); color:#00ffcc; padding:6px 12px; border-radius:20px; font-size:12px; border:1px solid #00ffcc; z-index:20; }
+        /* كاميرا صغيرة */
+        #camera-box { position:absolute; top:55px; left:12px; width:85px; height:110px; border-radius:12px; border:2px solid #00ffcc; overflow:hidden; z-index:90; background:#000; }
+        #cam, #output { position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; }
         
-        #result-bar { height:80px; background:#0f172a; display:flex; flex-direction:column; justify-content:center; align-items:center; border-top:2px solid #1e293b; }
-        #detected-action { font-size:24px; font-weight:bold; color:#00ffcc; }
-
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        /* الأزرار الجانبية مثل تيك توك */
+        #side-actions { position:absolute; right:12px; bottom:160px; z-index:80; display:flex; flex-direction:column; gap:18px; align-items:center; }
+        .action-btn { display:flex; flex-direction:column; align-items:center; gap:4px; }
+        .action-circle { width:48px; height:48px; border-radius:50%; background:rgba(255,255,255,0.15); display:flex; justify-content:center; align-items:center; font-size:24px; backdrop-filter:blur(6px); cursor:pointer; transition:transform 0.15s; }
+        .action-circle:active { transform:scale(0.9); }
+        .action-count { font-size:12px; font-weight:bold; }
+        
+        /* معلومات الفيديو */
+        #video-info { position:absolute; bottom:100px; left:14px; right:80px; z-index:80; }
+        #username { font-weight:bold; font-size:15px; margin-bottom:4px; }
+        #description { font-size:13px; opacity:0.95; line-height:1.4; }
+        
+        #status { position:absolute; top:55px; right:12px; background:rgba(0,0,0,0.8); color:#00ffcc; padding:5px 10px; border-radius:16px; font-size:11px; border:1px solid #00ffcc; z-index:90; }
+        #toast { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:rgba(0,0,0,0.85); color:white; padding:12px 24px; border-radius:30px; font-size:16px; font-weight:bold; z-index:100; opacity:0; transition:opacity 0.3s; pointer-events:none; }
+        #toast.show { opacity:1; }
+        
+        /* لوحة التعليقات */
+        #comment-panel { position:absolute; bottom:0; left:0; right:0; height:55%; background:#1a1a1a; border-radius:18px 18px 0 0; z-index:120; transform:translateY(100%); transition:transform 0.3s ease; display:flex; flex-direction:column; }
+        #comment-panel.open { transform:translateY(0); }
+        #comment-header { padding:14px; text-align:center; font-weight:bold; border-bottom:1px solid #333; position:relative; }
+        #close-comments { position:absolute; left:14px; top:14px; font-size:20px; cursor:pointer; }
+        #comments-list { flex:1; overflow-y:auto; padding:12px; }
+        .comment { padding:10px 0; border-bottom:1px solid #2a2a2a; font-size:13px; }
+        .comment b { color:#00ffcc; }
+        
+        #controls { position:absolute; bottom:20px; left:0; right:0; display:flex; justify-content:center; gap:10px; z-index:90; }
+        .btn { border:none; padding:11px 18px; border-radius:22px; font-size:13px; font-weight:bold; cursor:pointer; }
+        #startBtn { background:#00ffcc; color:#000; }
+        #nextBtn { background:#1e293b; color:white; border:1px solid #334155; }
     </style>
 </head>
 <body>
 
 <div id="header">
-    <h1>OMAR AIR-GESTURE</h1>
-    <div id="subtitle">واجهة اختبار تحريك الصور في الهواء عن بعد</div>
+    <h1>OMAR AIR GESTURE • تيك توك</h1>
 </div>
 
-<div id="main-zone">
-    <div id="status">جاري التحميل...</div>
-    
-    <div id="camera-preview">
-        <video id="video" autoplay playsinline muted></video>
+<video id="mainVideo" autoplay loop playsinline></video>
+
+<div id="camera-box">
+    <video id="cam" autoplay playsinline muted></video>
+    <canvas id="output"></canvas>
+</div>
+
+<div id="status">اضغط تشغيل</div>
+<div id="toast"></div>
+
+<div id="side-actions">
+    <div class="action-btn" id="likeBtn">
+        <div class="action-circle">❤️</div>
+        <div class="action-count" id="likeCount">0</div>
     </div>
-
-    <div id="gallery-container">
-        <!-- صور برمجية ملونة للاختبار خلفياتها من إنتاج ألوان متناسقة وعصرية -->
-        <div class="slide active" style="background-image: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-            <span>الصورة الأولى 🏞️</span>
-            <div class="slide-overlay">حرك يدك لليسار لرؤية الصورة التالية</div>
-        </div>
-        <div class="slide" style="background-image: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); color: #333;">
-            <span>الصورة الثانية 🌌</span>
-            <div class="slide-overlay">استمر في التحريك والتجربة السحرية</div>
-        </div>
-        <div class="slide" style="background-image: linear-gradient(135deg, #f6d365 0%, #fda085 100%); color: #333;">
-            <span>الصورة الثالثة 🚀</span>
-            <div class="slide-overlay">عد للأولى بتحريك يدك لليمين!</div>
-        </div>
+    <div class="action-btn" id="commentBtn">
+        <div class="action-circle">💬</div>
+        <div class="action-count">12</div>
+    </div>
+    <div class="action-btn" id="shareBtn">
+        <div class="action-circle">➤</div>
+        <div class="action-count">مشاركة</div>
     </div>
 </div>
 
-<div id="result-bar">
-    <div id="detected-action">لوّح بيدك (يمين / يسار)</div>
+<div id="video-info">
+    <div id="username">@omar_gesture</div>
+    <div id="description">فيديو تجريبي • حرّك يدك للأعلى للالتالي</div>
 </div>
 
-<!-- استدعاء مكتبات MediaPipe الرسمية -->
-<script src="https://jsdelivr.net" crossorigin="anonymous"></script>
-<script src="https://jsdelivr.net" crossorigin="anonymous"></script>
+<div id="comment-panel">
+    <div id="comment-header">
+        <span id="close-comments">×</span>
+        التعليقات
+    </div>
+    <div id="comments-list">
+        <div class="comment"><b>أحمد</b> • روعة 🔥</div>
+        <div class="comment"><b>سارة</b> • كيف سويت الحركة؟</div>
+        <div class="comment"><b>خالد</b> • تطبيق جامد</div>
+        <div class="comment"><b>نورة</b> • يشتغل ممتاز</div>
+        <div class="comment"><b>فهد</b> • أبي نسخة ثانية</div>
+    </div>
+</div>
+
+<div id="controls">
+    <button id="startBtn" class="btn">تشغيل التحكم</button>
+    <button id="nextBtn" class="btn">التالي</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
 
 <script>
-    const video = document.getElementById('video');
+    const mainVideo = document.getElementById('mainVideo');
+    const camVideo = document.getElementById('cam');
+    const canvas = document.getElementById('output');
+    const ctx = canvas.getContext('2d');
     const statusEl = document.getElementById('status');
-    const actionEl = document.getElementById('detected-action');
-    const slides = document.querySelectorAll('.slide');
+    const toast = document.getElementById('toast');
+    const likeCountEl = document.getElementById('likeCount');
+    const commentPanel = document.getElementById('comment-panel');
+    const startBtn = document.getElementById('startBtn');
+    const nextBtn = document.getElementById('nextBtn');
 
-    let currentSlideIndex = 0;
-    let hands = null;
-    let camera = null;
-    let lastX = null;
-    let lastGestureTime = 0;
+    let hands, camera, isRunning = false;
+    let likeCount = 0;
+    let lastGesture = 0;
+    let smoothY = 0.5;
+    let prevY = null;
 
-    function setStatus(text) {
-        statusEl.innerText = text;
+    // مصادر متنوعة من lorem.video عشان تحس إنها لا تنتهي
+    const sources = ['bunny', 'cat', 'nature', 'city', 'abstract', 'people', 'sport'];
+    const durations = ['8s', '10s', '12s', '15s'];
+    
+    function getRandomVideo() {
+        const src = sources[Math.floor(Math.random() * sources.length)];
+        const dur = durations[Math.floor(Math.random() * durations.length)];
+        // صيغة lorem.video
+        return `https://lorem.video/\( {src}_720p_h264_ \){dur}`;
     }
 
-    // دالة تغيير الصور بسلاسة في الواجهة
-    function changeSlide(direction) {
-        slides[currentSlideIndex].classList.remove('active');
-        if (direction === 'next') {
-            currentSlideIndex = (currentSlideIndex + 1) % slides.length;
-        } else if (direction === 'prev') {
-            currentSlideIndex = (currentSlideIndex - 1 + slides.length) % slides.length;
+    function showToast(text) {
+        toast.innerText = text;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 1200);
+    }
+
+    function loadNextVideo() {
+        mainVideo.src = getRandomVideo();
+        mainVideo.play().catch(()=>{});
+        likeCount = Math.floor(Math.random() * 500) + 20;
+        likeCountEl.innerText = likeCount;
+        document.getElementById('description').innerText = "فيديو جديد • ارفع يدك للأعلى للانتقال";
+        showToast("⬆️ فيديو جديد");
+    }
+
+    function detectGesture(landmarks) {
+        const now = Date.now();
+        if (now - lastGesture < 850) return;
+
+        const palm = landmarks[9];
+        const dy = smoothY - (prevY ?? smoothY);
+
+        if (Math.abs(dy) > 0.06) {
+            lastGesture = now;
+            if (dy < 0) loadNextVideo(); // رفع اليد = التالي
+            else showToast("⬇️ السابق (تجريبي)");
         }
-        slides[currentSlideIndex].classList.add('active');
     }
 
     function onResults(results) {
+        canvas.width = camVideo.videoWidth;
+        canvas.height = camVideo.videoHeight;
+        ctx.save();
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
+
         if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-            setStatus("✓ اليد متصلة");
+            const lm = results.multiHandLandmarks[0];
+            drawConnectors(ctx, lm, HAND_CONNECTIONS, { color: '#00ffcc', lineWidth: 2 });
+            drawLandmarks(ctx, lm, { color: '#ff2d55', lineWidth: 1, radius: 3 });
 
-            // التقاط نقطة منتصف كف اليد (نقطة رقم 9) لتتبع الحركة الأفقية
-            const handPoints = results.multiHandLandmarks[0];
-            const currentX = handPoints[9].x; 
-            const currentTime = Date.now();
+            const palm = lm[9];
+            smoothY = smoothY * 0.6 + palm.y * 0.4;
 
-            if (lastX !== null) {
-                const deltaX = currentX - lastX;
-                const timeDiff = currentTime - lastGestureTime;
-
-                // منع التكرار السريع جداً (انتظار 800 مللي ثانية بين كل حركة)
-                if (timeDiff > 800) {
-                    // حركة سريعة لليسار (تذكر أن الكاميرا معكوسة scaleX(-1))
-                    if (deltaX > 0.08) { 
-                        actionEl.innerText = "⬅️ حركة لليسار (التالي)";
-                        changeSlide('next');
-                        lastGestureTime = currentTime;
-                    } 
-                    // حركة سريعة لليمين
-                    else if (deltaX < -0.08) {
-                        actionEl.innerText = "➡️ حركة لليمين (السابق)";
-                        changeSlide('prev');
-                        lastGestureTime = currentTime;
-                    }
-                }
-            }
-            lastX = currentX;
+            detectGesture(lm);
+            statusEl.innerText = "✓ اليد متصلة";
+            prevY = smoothY;
         } else {
-            setStatus("ضع يدك أمام الكاميرا الصغيرة...");
-            lastX = null;
+            statusEl.innerText = "ضع يدك أمام الكاميرا";
+            prevY = null;
         }
+        ctx.restore();
     }
 
-    async function startCamera() {
+    async function start() {
         try {
-            setStatus("تشغيل الكاميرا...");
-            
-            const constraints = {
-                video: { facingMode: 'user', width: 320, height: 240 },
-                audio: false
-            };
-
-            const stream = await navigator.mediaDevices.getUserMedia(constraints);
-            video.srcObject = stream;
-            video.style.transform = 'scaleX(-1)'; // قلب الكاميرا الأمامية مثل المرآة
-
-            if (!hands) {
-                hands = new Hands({
-                    locateFile: (file) => `https://jsdelivr.net{file}`
-                });
-                hands.setOptions({
-                    maxNumHands: 1,
-                    modelComplexity: 0, // 0 تجعل المعالجة خارقة السرعة على الهواتف
-                    minDetectionConfidence: 0.6,
-                    minTrackingConfidence: 0.6
-                });
-                hands.onResults(onResults);
-            }
-
-            camera = new Camera(video, {
-                onFrame: async () => {
-                    if (hands) await hands.send({ image: video });
-                },
-                width: 320,
-                height: 240
+            statusEl.innerText = "جاري التشغيل...";
+            hands = new Hands({
+                locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
             });
-            camera.start();
-            setStatus("المستشعر جاهز 🔮");
-        } catch (err) {
-            console.error(err);
-            setStatus("خطأ في تشغيل الكاميرا");
+            hands.setOptions({
+                maxNumHands: 1,
+                modelComplexity: 1,
+                minDetectionConfidence: 0.65,
+                minTrackingConfidence: 0.65
+            });
+            hands.onResults(onResults);
+
+            camera = new Camera(camVideo, {
+                onFrame: async () => { if (isRunning) await hands.send({ image: camVideo }); },
+                width: 640,
+                height: 480
+            });
+            await camera.start();
+            camVideo.style.transform = canvas.style.transform = 'scaleX(-1)';
+            
+            isRunning = true;
+            startBtn.innerText = "إيقاف";
+            statusEl.innerText = "التحكم يعمل 🔮";
+            loadNextVideo();
+            showToast("ارفع يدك للأعلى");
+        } catch (e) {
+            statusEl.innerText = "خطأ في التشغيل";
+            console.error(e);
         }
     }
 
-    document.addEventListener('deviceready', () => {
-        if (window.cordova && cordova.plugins && cordova.plugins.permissions) {
-            const permissions = cordova.plugins.permissions;
-            permissions.requestPermission(permissions.CAMERA, (status) => {
-                if (status.hasPermission) startCamera();
-                else setStatus("يرجى منح الصلاحية");
-            });
-        } else {
-            startCamera();
+    // الأحداث
+    startBtn.onclick = () => {
+        if (!isRunning) start();
+        else {
+            isRunning = false;
+            if (camera) camera.stop();
+            startBtn.innerText = "تشغيل التحكم";
+            statusEl.innerText = "تم الإيقاف";
         }
-    }, false);
+    };
 
-    window.addEventListener('load', () => { setTimeout(startCamera, 500); });
+    nextBtn.onclick = loadNextVideo;
+
+    document.getElementById('likeBtn').onclick = () => {
+        likeCount++;
+        likeCountEl.innerText = likeCount;
+        showToast("❤️ تم الإعجاب");
+    };
+
+    document.getElementById('commentBtn').onclick = () => {
+        commentPanel.classList.add('open');
+    };
+
+    document.getElementById('close-comments').onclick = () => {
+        commentPanel.classList.remove('open');
+    };
+
+    document.getElementById('shareBtn').onclick = async () => {
+        if (navigator.share) {
+            try {
+                await navigator.share({ title: 'Omar AirGesture', text: 'شوف هذا التطبيق', url: location.href });
+            } catch(e) {}
+        } else {
+            showToast("تم نسخ الرابط");
+        }
+    };
+
+    // أول فيديو
+    window.onload = () => {
+        mainVideo.src = getRandomVideo();
+        mainVideo.play().catch(()=>{});
+    };
 </script>
-<script src="cordova.js"></script>
 </body>
 </html>
