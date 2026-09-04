@@ -1,703 +1,199 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
-<title>Omar Gesture • YouTube Shorts</title>
-
-<style>
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-html, body {
-    width: 100%;
-    height: 100%;
-    background: #000;
-    overflow: hidden;
-    color: white;
-    font-family: system-ui, sans-serif;
-    touch-action: none;
-}
-
-#player {
-    position: fixed;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    background: #000;
-}
-
-#loading {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: #00f2ea;
-    font-size: 15px;
-    z-index: 30;
-}
-
-#status {
-    position: fixed;
-    top: 45px;
-    right: 12px;
-    background: rgba(0,0,0,.75);
-    color: #00f2ea;
-    padding: 5px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    z-index: 50;
-}
-
-#actions {
-    position: fixed;
-    right: 12px;
-    bottom: 160px;
-    z-index: 40;
-
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 16px;
-}
-
-.circle {
-    width: 52px;
-    height: 52px;
-    border-radius: 50%;
-
-    background: rgba(255,255,255,.16);
-    backdrop-filter: blur(6px);
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    font-size: 24px;
-    cursor: pointer;
-    user-select: none;
-}
-
-.circle:active {
-    transform: scale(.9);
-}
-
-#info {
-    position: fixed;
-    bottom: 110px;
-    left: 14px;
-    right: 80px;
-    z-index: 40;
-}
-
-#title {
-    font-weight: 700;
-    font-size: 15px;
-    margin-bottom: 4px;
-
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-
-    overflow: hidden;
-}
-
-#channel {
-    font-size: 13px;
-    opacity: .85;
-}
-
-#toast {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-
-    transform: translate(-50%, -50%);
-
-    background: rgba(0,0,0,.9);
-    color: white;
-
-    padding: 12px 24px;
-    border-radius: 30px;
-
-    font-size: 16px;
-    font-weight: 700;
-
-    opacity: 0;
-    transition: .25s;
-
-    z-index: 100;
-    pointer-events: none;
-}
-
-#toast.show {
-    opacity: 1;
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Omar Gesture • YouTube</title>
+    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; style-src * 'unsafe-inline'; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src * 'unsafe-inline' 'unsafe-eval'; img-src * data: blob:; video-src * data: blob:;">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body, html { width:100%; height:100%; background:#000; font-family: system-ui, sans-serif; overflow:hidden; color:white; }
+        #player { position: absolute; top:0; left:0; width:100%; height:100%; }
+        #status { position: absolute; top: 45px; right: 12px; background: rgba(0,0,0,0.75); color: #00f2ea; padding: 5px 12px; border-radius: 20px; font-size: 12px; z-index: 50; border: 1px solid #00f2ea; }
+        #actions { position: absolute; right: 12px; bottom: 160px; z-index: 40; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+        .circle { width: 52px; height: 52px; border-radius: 50%; background: rgba(255,255,255,0.16); display: flex; align-items: center; justify-content: center; font-size: 24px; backdrop-filter: blur(6px); }
+        #info { position: absolute; bottom: 110px; left: 14px; right: 80px; z-index: 40; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+        #title { font-weight: 700; font-size: 15px; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        #channel { font-size: 13px; opacity: 0.85; color: #00f2ea; }
+        #toast { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.9); color: white; padding: 12px 24px; border-radius: 30px; font-size: 16px; font-weight: 700; opacity: 0; transition: 0.25s; z-index: 100; pointer-events: none; border: 1px solid #00f2ea; }
+        #toast.show { opacity: 1; }
+        #loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #00f2ea; font-size: 15px; z-index: 30; }
+        #cam-preview { position: absolute; top: 45px; left: 12px; width: 70px; height: 90px; border-radius: 8px; border: 1px solid #00f2ea; overflow: hidden; z-index: 50; background: #000; opacity: 0.6; }
+        #cam-video { width: 100%; height: 100%; object-fit: cover; }
+    </style>
 </head>
-
 <body>
 
 <div id="player"></div>
-
-<div id="loading">
-    جاري تحميل فيديو من يوتيوب...
-</div>
-
-<div id="status">
-    جاهز
-</div>
-
+<div id="loading">جاري تحميل فيديو من يوتيوب...</div>
+<div id="status">جاهز</div>
 <div id="toast"></div>
 
+<div id="cam-preview">
+    <video id="cam-video" autoplay playsinline muted></video>
+</div>
+
 <div id="actions">
-
-    <div class="circle" id="likeBtn">
-        ❤️
-    </div>
-
-    <div class="circle" id="commentBtn">
-        💬
-    </div>
-
-    <div class="circle" id="shareBtn">
-        ➤
-    </div>
-
-    <div class="circle" id="soundBtn">
-        🔊
-    </div>
-
+    <div class="circle" id="likeBtn">❤️</div>
+    <div class="circle">💬</div>
+    <div class="circle" id="shareBtn">➤</div>
 </div>
 
 <div id="info">
-
-    <div id="title">
-        جاري التحميل...
-    </div>
-
-    <div id="channel">
-        @omar_gesture
-    </div>
-
+    <div id="title">جاري التحميل...</div>
+    <div id="channel">@omar_gesture</div>
 </div>
 
-<script src="https://www.youtube.com/iframe_api"></script>
-
+<!-- استدعاء السكريبتات والمكتبات الرسمية -->
+<script src="https://youtube.com"></script>
+<script src="https://jsdelivr.net" crossorigin="anonymous"></script>
+<script src="https://jsdelivr.net" crossorigin="anonymous"></script>
 <script>
+    const API_KEY = "AIzaSyBsasFOnySASuOoH_YcRDqA6dim24zKmKU";
 
-/* =========================
-   الإعدادات
-========================= */
+    const queries = [
+        "كوميديا عربية", "ضحك جزائري", "sketch comedy", "funny fails",
+        "طبختي", "cooking arabic", "رقص", "dance",
+        "حيوانات مضحكة", "funny animals", "كرة قدم", "football skills",
+        "سفر", "travel vlog", "موسيقى عربية", "arabic music",
+        "نكت جزائرية", "تحديات", "pranks"
+    ];
 
-const API_KEY = "YOUR_API_KEY_HERE";
+    let player = null;
+    let currentVideoId = null;
+    let isPlayerReady = false;
 
-const queries = [
-    "كوميديا عربية",
-    "ضحك جزائري",
-    "sketch comedy",
-    "funny fails",
-    "طبخ عربي",
-    "cooking arabic",
-    "رقص",
-    "dance",
-    "حيوانات مضحكة",
-    "funny animals",
-    "كرة قدم",
-    "football skills",
-    "سفر",
-    "travel vlog",
-    "موسيقى عربية",
-    "arabic music",
-    "نكت جزائرية",
-    "تحديات",
-    "pranks"
-];
+    const camVideo = document.getElementById('cam-video');
+    let hands = null;
+    let camera = null;
+    let lastY = null;
+    let lastGestureTime = 0;
 
+    const statusEl = document.getElementById('status');
+    const titleEl = document.getElementById('title');
+    const channelEl = document.getElementById('channel');
+    const toast = document.getElementById('toast');
+    const loading = document.getElementById('loading');
 
-/* =========================
-   المتغيرات
-========================= */
+    function showToast(msg) {
+        toast.innerText = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 1200);
+    }
 
-let player = null;
-let currentVideoId = null;
-let isPlayerReady = false;
-let isMuted = false;
-
-let startY = 0;
-let startX = 0;
-
-
-/* =========================
-   عناصر الصفحة
-========================= */
-
-const statusEl = document.getElementById("status");
-const titleEl = document.getElementById("title");
-const channelEl = document.getElementById("channel");
-const toast = document.getElementById("toast");
-const loading = document.getElementById("loading");
-
-const likeBtn = document.getElementById("likeBtn");
-const commentBtn = document.getElementById("commentBtn");
-const shareBtn = document.getElementById("shareBtn");
-const soundBtn = document.getElementById("soundBtn");
-
-
-/* =========================
-   رسالة مؤقتة
-========================= */
-
-function showToast(message) {
-
-    toast.innerText = message;
-    toast.classList.add("show");
-
-    setTimeout(() => {
-        toast.classList.remove("show");
-    }, 1200);
-}
-
-
-/* =========================
-   YouTube API
-========================= */
-
-function onYouTubeIframeAPIReady() {
-
-    player = new YT.Player("player", {
-
-        height: "100%",
-        width: "100%",
-
-        playerVars: {
-
-            autoplay: 1,
-            controls: 0,
-            modestbranding: 1,
-            rel: 0,
-            fs: 0,
-            playsinline: 1,
-            iv_load_policy: 3
-
-        },
-
-        events: {
-
-            onReady: function () {
-
-                isPlayerReady = true;
-
-                loadRandomVideo();
-
-            },
-
-            onStateChange: function(event) {
-
-                if (event.data === YT.PlayerState.ENDED) {
-
-                    loadRandomVideo();
-
-                }
-
-            },
-
-            onError: function() {
-
-                statusEl.innerText = "تعذر تشغيل الفيديو";
-
-                showToast("تعذر تشغيل الفيديو");
-
+    function onYouTubeIframeAPIReady() {
+        player = new YT.Player('player', {
+            height: '100%', width: '100%',
+            playerVars: { autoplay: 1, controls: 0, modestbranding: 1, rel: 0, showinfo: 0, fs: 0, playsinline: 1 },
+            events: {
+                onReady: () => { isPlayerReady = true; initSensors(); },
+                onStateChange: (e) => { if (e.data === YT.PlayerState.ENDED) { loadRandomVideo(); } }
             }
-
-        }
-
-    });
-
-}
-
-
-/* =========================
-   تحميل فيديو عشوائي
-========================= */
-
-async function loadRandomVideo() {
-
-    if (!isPlayerReady || !player) {
-        return;
-    }
-
-    loading.style.display = "block";
-
-    statusEl.innerText = "جاري البحث...";
-
-    const query =
-        queries[Math.floor(Math.random() * queries.length)];
-
-
-    try {
-
-        /*
-         * تم إصلاح الخطأ هنا:
-         *
-         * ${encodeURIComponent(query)}
-         * ${API_KEY}
-         */
-
-        const url =
-            `https://www.googleapis.com/youtube/v3/search` +
-            `?part=snippet` +
-            `&q=${encodeURIComponent(query)}` +
-            `&type=video` +
-            `&videoDuration=medium` +
-            `&maxResults=10` +
-            `&key=${API_KEY}`;
-
-
-        const response = await fetch(url);
-
-        if (!response.ok) {
-
-            throw new Error(
-                "HTTP Error: " + response.status
-            );
-
-        }
-
-
-        const data = await response.json();
-
-
-        if (data.error) {
-
-            console.error(data.error);
-
-            throw new Error(
-                data.error.message || "YouTube API Error"
-            );
-
-        }
-
-
-        if (!data.items || data.items.length === 0) {
-
-            statusEl.innerText = "لم يتم العثور على فيديو";
-
-            loading.style.display = "none";
-
-            showToast("لم أجد فيديو");
-
-            return;
-
-        }
-
-
-        /*
-         * اختيار فيديو عشوائي
-         */
-
-        let item =
-            data.items[
-                Math.floor(Math.random() * data.items.length)
-            ];
-
-
-        currentVideoId = item.id.videoId;
-
-
-        /*
-         * تحديث المعلومات
-         */
-
-        titleEl.innerText =
-            item.snippet.title;
-
-        channelEl.innerText =
-            item.snippet.channelTitle;
-
-
-        /*
-         * تشغيل الفيديو
-         */
-
-        player.loadVideoById({
-            videoId: currentVideoId
         });
-
-
-        statusEl.innerText = "يعمل ✔";
-
-        loading.style.display = "none";
-
-        showToast("فيديو جديد");
-
-
-    } catch (error) {
-
-        console.error(error);
-
-        statusEl.innerText =
-            "خطأ في التحميل";
-
-        loading.style.display =
-            "none";
-
-        showToast("تحقق من API Key والإنترنت");
-
     }
 
-}
-
-
-/* =========================
-   الضغط على الفيديو
-========================= */
-
-document
-.getElementById("player")
-.addEventListener("click", function() {
-
-    if (!player) {
-        return;
-    }
-
-
-    const state =
-        player.getPlayerState();
-
-
-    if (state === YT.PlayerState.PLAYING) {
-
-        player.pauseVideo();
-
-        showToast("⏸ إيقاف");
-
-    } else {
-
-        player.playVideo();
-
-        showToast("▶ تشغيل");
-
-    }
-
-});
-
-
-/* =========================
-   السحب
-========================= */
-
-document.addEventListener(
-    "touchstart",
-    function(event) {
-
-        startY =
-            event.touches[0].clientY;
-
-        startX =
-            event.touches[0].clientX;
-
-    },
-    {
-        passive: true
-    }
-);
-
-
-document.addEventListener(
-    "touchend",
-    function(event) {
-
-        const endY =
-            event.changedTouches[0].clientY;
-
-        const endX =
-            event.changedTouches[0].clientX;
-
-
-        const diffY =
-            startY - endY;
-
-        const diffX =
-            startX - endX;
-
-
-        /*
-         * نتأكد أن الحركة عمودية
-         */
-
-        if (Math.abs(diffY) < 70) {
-            return;
-        }
-
-        if (Math.abs(diffY) < Math.abs(diffX)) {
-            return;
-        }
-
-
-        /*
-         * في الاتجاهين نحمل فيديو جديد
-         */
-
-        if (diffY > 0) {
-
-            showToast("⬆ التالي");
-
-        } else {
-
-            showToast("⬇ فيديو جديد");
-
-        }
-
-        loadRandomVideo();
-
-    },
-    {
-        passive: true
-    }
-);
-
-
-/* =========================
-   إعجاب
-========================= */
-
-likeBtn.addEventListener(
-    "click",
-    function(event) {
-
-        event.stopPropagation();
-
-        likeBtn.innerText = "💖";
-
-        showToast("❤️ أعجبني");
-
-    }
-);
-
-
-/* =========================
-   تعليق
-========================= */
-
-commentBtn.addEventListener(
-    "click",
-    function(event) {
-
-        event.stopPropagation();
-
-        showToast("💬 التعليقات");
-
-    }
-);
-
-
-/* =========================
-   مشاركة
-========================= */
-
-shareBtn.addEventListener(
-    "click",
-    async function(event) {
-
-        event.stopPropagation();
-
-
-        if (!currentVideoId) {
-
-            showToast("لا يوجد فيديو");
-
-            return;
-
-        }
-
-
-        const videoUrl =
-            `https://www.youtube.com/watch?v=${currentVideoId}`;
-
+    async function loadRandomVideo() {
+        loading.style.display = "block";
+        statusEl.innerText = "جاري البحث...";
+        const query = queries[Math.floor(Math.random() * queries.length)];
 
         try {
+            const url = `https://googleapis.com{encodeURIComponent(query)}&type=video&videoDuration=medium&maxResults=8&key=${API_KEY}`;
+            const res = await fetch(url);
+            const data = await res.json();
 
-            if (navigator.share) {
-
-                await navigator.share({
-
-                    title: titleEl.innerText,
-
-                    text:
-                        "شاهد هذا الفيديو",
-
-                    url: videoUrl
-
-                });
-
-            } else {
-
-                await navigator.clipboard.writeText(
-                    videoUrl
-                );
-
-                showToast("تم نسخ الرابط 📋");
-
+            if (!data.items || data.items.length === 0) {
+                statusEl.innerText = "لم يتم العثور على محتوى";
+                loading.style.display = "none";
+                return;
             }
 
-        } catch (error) {
+            const item = data.items[Math.floor(Math.random() * data.items.length)];
+            currentVideoId = item.id.videoId;
 
-            console.log(error);
+            if (isPlayerReady && player) { player.loadVideoById(currentVideoId); }
 
+            titleEl.innerText = item.snippet.title;
+            channelEl.innerText = item.snippet.channelTitle;
+            statusEl.innerText = "يعمل ✔";
+            loading.style.display = "none";
+            showToast("فيديو جديد 🎬");
+        } catch (err) {
+            console.error(err);
+            statusEl.innerText = "خطأ في الاتصال";
+            loading.style.display = "none";
         }
-
     }
-);
+    function onHandResults(results) {
+        if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+            statusEl.innerText = "✓ اليد نشطة";
+            const handPoints = results.multiHandLandmarks[0];
+            const currentY = handPoints.y; 
+            const currentTime = Date.now();
 
-
-/* =========================
-   الصوت
-========================= */
-
-soundBtn.addEventListener(
-    "click",
-    function(event) {
-
-        event.stopPropagation();
-
-
-        if (!player) {
-            return;
-        }
-
-
-        if (isMuted) {
-
-            player.unMute();
-
-            soundBtn.innerText = "🔊";
-
-            isMuted = false;
-
-            showToast("🔊 الصوت يعمل");
-
+            if (lastY !== null && (currentTime - lastGestureTime > 1200)) {
+                const deltaY = currentY - lastY;
+                if (deltaY > 0.08) { 
+                    loadRandomVideo();
+                    lastGestureTime = currentTime;
+                }
+            }
+            lastY = currentY;
         } else {
-
-            player.mute();
-
-            soundBtn.innerText = "🔇";
-
-            isMuted = true;
-
-            showToast("🔇 كتم الصوت");
-
+            statusEl.innerText = "لوّح للأسفل لقلب يوتيوب...";
+            lastY = null;
         }
-
     }
-);
 
+    async function startCameraSensor() {
+        try {
+            const constraints = { video: { facingMode: 'user', width: 320, height: 240 }, audio: false };
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+            camVideo.srcObject = stream;
+            camVideo.style.transform = 'scaleX(-1)';
+
+            hands = new Hands({ locateFile: (file) => `https://jsdelivr.net{file}` });
+            hands.setOptions({ maxNumHands: 1, modelComplexity: 0, minDetectionConfidence: 0.6, minTrackingConfidence: 0.6 });
+            hands.onResults(onHandResults);
+
+            camera = new Camera(camVideo, {
+                onFrame: async () => { if (hands) await hands.send({ image: camVideo }); },
+                width: 320, height: 240
+            });
+            camera.start();
+            loadRandomVideo();
+        } catch (err) {
+            statusEl.innerText = "خطأ في كاميرا الإيماءات";
+        }
+    }
+
+    function initSensors() {
+        if (window.cordova && cordova.plugins && cordova.plugins.permissions) {
+            cordova.plugins.permissions.requestPermission(cordova.plugins.permissions.CAMERA, (status) => {
+                if (status.hasPermission) startCameraSensor();
+            });
+        } else {
+            startCameraSensor();
+        }
+    }
+
+    let startY = 0;
+    document.addEventListener('touchstart', e => { startY = e.touches[0].clientY; }, {passive: true});
+    document.addEventListener('touchend', e => {
+        const diff = startY - e.changedTouches[0].clientY;
+        if (Math.abs(diff) > 70) { loadRandomVideo(); }
+    }, {passive: true});
+
+    document.getElementById('player').addEventListener('click', () => {
+        if (!player) return;
+        const state = player.getPlayerState();
+        if (state === YT.PlayerState.PLAYING) { player.pauseVideo(); showToast("إيقاف"); } 
+        else { player.playVideo(); showToast("تشغيل"); }
+    });
+
+    document.getElementById('likeBtn').addEventListener('click', (e) => { e.stopPropagation(); showToast("❤️"); });
+    document.getElementById('shareBtn').addEventListener('click', (e) => { e.stopPropagation(); showToast("مشاركة"); });
 </script>
-
+<script src="cordova.js"></script>
 </body>
 </html>
