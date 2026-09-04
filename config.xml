@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="com.omar.signlink" version="1.0.0" xmlns="http://w3.org" xmlns:cdv="http://apache.org">
-    <name>Omar SignLink</name>
-    <description>Real Hand Tracking with MediaPipe</description>
+<widget id="com.omar.gesture.youtube" version="1.0.0" xmlns="http://w3.org" xmlns:cdv="http://apache.org">
+    <name>Omar Gesture YouTube</name>
+    <description>تطبيق مشغل يوتيوب سحري للتحكم بالهواء عن بعد عبر حركات اليد</description>
     <author email="dev@omar.com" href="http://omar.com">Omar Dev</author>
     <content src="index.html" />
     <access origin="*" />
@@ -9,9 +9,12 @@
     <allow-intent href="https://*/*" />
     
     <platform name="android">
-        <!-- حقن إذن الكاميرا رسمياً داخل نظام الأندرويد -->
+        <!-- حقن إذن الكاميرا رسمياً داخل ملف الأندرويد الرئيسي ليعمل مستشعر اليد -->
         <config-file target="AndroidManifest.xml" parent="/*">
             <uses-permission android:name="android.permission.CAMERA" />
         </config-file>
+
+        <!-- الحل الجذري: زيادة مهلة تحميل الرابط إلى 90 ثانية لمنع ظهور خطأ التوصيل الرمادي -->
+        <preference name="loadUrlTimeoutValue" value="90000" />
     </platform>
 </widget>
