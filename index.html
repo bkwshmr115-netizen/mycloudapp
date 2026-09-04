@@ -3,251 +3,252 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Omar Gesture • Pexels</title>
+    <title>Omar Gesture • YouTube</title>
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
         body, html { width:100%; height:100%; background:#000; font-family: system-ui, sans-serif; overflow:hidden; color:white; }
         
-        #mainVideo { position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; background:#000; }
+        #player {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
         
-        #camera-box { position:absolute; top:40px; left:12px; width:78px; height:100px; border-radius:14px; border:2px solid #00f2ea; overflow:hidden; z-index:50; background:#111; }
-        #cam, #output { width:100%; height:100%; object-fit:cover; }
+        #status {
+            position: absolute;
+            top: 45px;
+            right: 12px;
+            background: rgba(0,0,0,0.75);
+            color: #00f2ea;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            z-index: 50;
+        }
         
-        #status { position:absolute; top:40px; right:12px; background:rgba(0,0,0,0.75); color:#00f2ea; padding:5px 11px; border-radius:20px; font-size:11px; z-index:50; }
+        #actions {
+            position: absolute;
+            right: 12px;
+            bottom: 160px;
+            z-index: 40;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+        .circle {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.16);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            backdrop-filter: blur(6px);
+        }
         
-        #actions { position:absolute; right:10px; bottom:150px; z-index:40; display:flex; flex-direction:column; align-items:center; gap:16px; }
-        .action { text-align:center; }
-        .circle { width:50px; height:50px; border-radius:50%; background:rgba(255,255,255,0.16); display:flex; align-items:center; justify-content:center; font-size:24px; backdrop-filter:blur(8px); margin-bottom:3px; }
-        .count { font-size:12px; font-weight:600; }
+        #info {
+            position: absolute;
+            bottom: 110px;
+            left: 14px;
+            right: 80px;
+            z-index: 40;
+        }
+        #title {
+            font-weight: 700;
+            font-size: 15px;
+            margin-bottom: 4px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        #channel {
+            font-size: 13px;
+            opacity: 0.85;
+        }
         
-        #info { position:absolute; bottom:105px; left:14px; right:75px; z-index:40; }
-        #user { font-weight:700; font-size:15px; margin-bottom:3px; }
-        #desc { font-size:13px; opacity:0.95; line-height:1.35; }
-        #credit { font-size:11px; opacity:0.7; margin-top:6px; }
+        #toast {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: 700;
+            opacity: 0;
+            transition: 0.25s;
+            z-index: 100;
+            pointer-events: none;
+        }
+        #toast.show { opacity: 1; }
         
-        #controls { position:absolute; bottom:20px; left:0; right:0; display:flex; justify-content:center; gap:10px; z-index:50; }
-        .btn { border:none; padding:11px 20px; border-radius:30px; font-size:14px; font-weight:700; }
-        #startBtn { background:#00f2ea; color:#000; }
-        #nextBtn { background:#fe2c55; color:white; }
-        
-        #toast { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:rgba(0,0,0,0.9); color:white; padding:13px 26px; border-radius:40px; font-size:16px; font-weight:700; opacity:0; transition:0.25s; z-index:100; pointer-events:none; }
-        #toast.show { opacity:1; }
-        
-        #loading { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:#00f2ea; font-size:15px; z-index:30; }
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #00f2ea;
+            font-size: 15px;
+            z-index: 30;
+        }
     </style>
 </head>
 <body>
 
-<video id="mainVideo" autoplay loop playsinline></video>
-<div id="loading">جاري تحميل الفيديوهات...</div>
-
-<div id="camera-box">
-    <video id="cam" autoplay playsinline muted></video>
-    <canvas id="output"></canvas>
-</div>
-
-<div id="status">اضغط تشغيل</div>
+<div id="player"></div>
+<div id="loading">جاري تحميل فيديو من يوتيوب...</div>
+<div id="status">جاهز</div>
 <div id="toast"></div>
 
 <div id="actions">
-    <div class="action">
-        <div class="circle" id="likeBtn">❤️</div>
-        <div class="count" id="likeCount">0</div>
-    </div>
-    <div class="action">
-        <div class="circle">💬</div>
-        <div class="count">--</div>
-    </div>
-    <div class="action">
-        <div class="circle" id="shareBtn">➤</div>
-        <div class="count">مشاركة</div>
-    </div>
+    <div class="circle" id="likeBtn">❤️</div>
+    <div class="circle">💬</div>
+    <div class="circle" id="shareBtn">➤</div>
 </div>
 
 <div id="info">
-    <div id="user">@omar_gesture</div>
-    <div id="desc">ارفع يدك للأعلى لتغيير الفيديو</div>
-    <div id="credit">فيديوهات من Pexels</div>
+    <div id="title">جاري التحميل...</div>
+    <div id="channel">@omar_gesture</div>
 </div>
 
-<div id="controls">
-    <button id="startBtn" class="btn">تشغيل التحكم</button>
-    <button id="nextBtn" class="btn">التالي ⏭</button>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
-
+<script src="https://www.youtube.com/iframe_api"></script>
 <script>
-    const API_KEY = "dapXJVhUGkZXY6i7Va5iYzq7vzNAl82Empnr8Of5NOFhwrpaRgx0QPLg";
+    const API_KEY = "AIzaSyBsasFOnySASuOoH_YcRDqA6dim24zKmKU";
 
-    const queries = ["nature", "city", "people", "ocean", "mountain", "travel", "food", "sport", "night", "sunset", "forest", "beach", "drone", "cars", "animals"];
-    let currentQuery = 0;
-    let videoList = [];
-    let currentIndex = 0;
-    let isRunning = false;
-    let lastGestureTime = 0;
-    let smoothY = 0.5;
-    let prevY = null;
-    let likeCount = 0;
+    const queries = [
+        "كوميديا عربية", "ضحك جزائري", "sketch comedy", "funny fails",
+        "طبختي", "cooking arabic", "رقص", "dance",
+        "حيوانات مضحكة", "funny animals", "كرة قدم", "football skills",
+        "سفر", "travel vlog", "موسيقى عربية", "arabic music",
+        "نكت جزائرية", "تحديات", "pranks"
+    ];
 
-    const mainVideo = document.getElementById('mainVideo');
-    const cam = document.getElementById('cam');
-    const canvas = document.getElementById('output');
-    const ctx = canvas.getContext('2d');
+    let player = null;
+    let currentVideoId = null;
+    let isPlayerReady = false;
+
     const statusEl = document.getElementById('status');
+    const titleEl = document.getElementById('title');
+    const channelEl = document.getElementById('channel');
     const toast = document.getElementById('toast');
     const loading = document.getElementById('loading');
-    const likeCountEl = document.getElementById('likeCount');
 
     function showToast(msg) {
         toast.innerText = msg;
         toast.classList.add('show');
-        setTimeout(() => toast.classList.remove('show'), 1300);
+        setTimeout(() => toast.classList.remove('show'), 1200);
     }
 
-    async function fetchVideos(query) {
-        try {
-            const res = await fetch(`https://api.pexels.com/videos/search?query=${query}&orientation=portrait&per_page=15`, {
-                headers: { Authorization: API_KEY }
-            });
-            const data = await res.json();
-            return data.videos || [];
-        } catch (e) {
-            console.error(e);
-            return [];
-        }
+    // عندما يجهز YouTube API
+    function onYouTubeIframeAPIReady() {
+        player = new YT.Player('player', {
+            height: '100%',
+            width: '100%',
+            playerVars: {
+                autoplay: 1,
+                controls: 0,
+                modestbranding: 1,
+                rel: 0,
+                showinfo: 0,
+                fs: 0,
+                playsinline: 1
+            },
+            events: {
+                onReady: () => {
+                    isPlayerReady = true;
+                    loadRandomVideo();
+                },
+                onStateChange: (e) => {
+                    if (e.data === YT.PlayerState.ENDED) {
+                        loadRandomVideo(); // فيديو جديد لما يخلص
+                    }
+                }
+            }
+        });
     }
 
-    async function loadNewBatch() {
+    async function loadRandomVideo() {
         loading.style.display = "block";
-        const query = queries[currentQuery % queries.length];
-        currentQuery++;
-        const videos = await fetchVideos(query);
-        
-        if (videos.length > 0) {
-            videoList = videos;
-            currentIndex = 0;
-            playCurrent();
-        } else {
-            showToast("فشل تحميل الفيديوهات");
-        }
-        loading.style.display = "none";
-    }
+        statusEl.innerText = "جاري البحث...";
 
-    function playCurrent() {
-        if (!videoList.length) return;
-        const video = videoList[currentIndex];
-        
-        // نختار أفضل ملف فيديو متاح
-        let videoFile = video.video_files.find(f => f.quality === "hd") || 
-                        video.video_files.find(f => f.quality === "sd") || 
-                        video.video_files[0];
-        
-        if (videoFile) {
-            mainVideo.src = videoFile.link;
-            mainVideo.play().catch(()=>{});
-            likeCount = Math.floor(Math.random() * 900) + 100;
-            likeCountEl.innerText = likeCount;
-            document.getElementById('desc').innerText = video.user?.name ? `مقطع بواسطة ${video.user.name}` : "فيديو من Pexels";
-            document.getElementById('credit').innerText = `Pexels • ${queries[(currentQuery-1) % queries.length]}`;
-            showToast("فيديو جديد 🎬");
-        }
-    }
+        const query = queries[Math.floor(Math.random() * queries.length)];
 
-    function nextVideo() {
-        if (currentIndex < videoList.length - 1) {
-            currentIndex++;
-            playCurrent();
-        } else {
-            // خلصت الدفعة، نجيب دفعة جديدة
-            loadNewBatch();
-        }
-    }
-
-    function detectGesture(landmarks) {
-        const now = Date.now();
-        if (now - lastGestureTime < 850) return;
-
-        const palmY = landmarks[9].y;
-        smoothY = smoothY * 0.6 + palmY * 0.4;
-        const dy = smoothY - (prevY || smoothY);
-
-        if (dy < -0.04) {
-            lastGestureTime = now;
-            nextVideo();
-        }
-        prevY = smoothY;
-    }
-
-    function onResults(results) {
-        canvas.width = cam.videoWidth || 640;
-        canvas.height = cam.videoHeight || 480;
-        ctx.save();
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
-
-        if (results.multiHandLandmarks?.length > 0) {
-            const lm = results.multiHandLandmarks[0];
-            drawConnectors(ctx, lm, HAND_CONNECTIONS, {color:'#00f2ea', lineWidth:2});
-            drawLandmarks(ctx, lm, {color:'#fe2c55', lineWidth:1, radius:3});
-            detectGesture(lm);
-            statusEl.innerText = "✓ ارفع يدك";
-        } else {
-            statusEl.innerText = "ضع يدك أمام الكاميرا";
-            prevY = null;
-        }
-        ctx.restore();
-    }
-
-    async function startCamera() {
         try {
-            const hands = new Hands({
-                locateFile: file => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
-            });
-            hands.setOptions({
-                maxNumHands: 1,
-                modelComplexity: 1,
-                minDetectionConfidence: 0.65,
-                minTrackingConfidence: 0.65
-            });
-            hands.onResults(onResults);
+            const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=\( {encodeURIComponent(query)}&type=video&videoDuration=medium&maxResults=8&key= \){API_KEY}`;
+            const res = await fetch(url);
+            const data = await res.json();
 
-            const camera = new Camera(cam, {
-                onFrame: async () => { if (isRunning) await hands.send({image: cam}); },
-                width: 640,
-                height: 480
-            });
-            await camera.start();
-            cam.style.transform = canvas.style.transform = 'scaleX(-1)';
-            isRunning = true;
-            document.getElementById('startBtn').innerText = "إيقاف";
-            statusEl.innerText = "التحكم يعمل";
-        } catch (e) {
-            statusEl.innerText = "خطأ في الكاميرا";
+            if (!data.items || data.items.length === 0) {
+                statusEl.innerText = "ما لقيت فيديوهات";
+                loading.style.display = "none";
+                return;
+            }
+
+            // نختار فيديو عشوائي
+            const item = data.items[Math.floor(Math.random() * data.items.length)];
+            currentVideoId = item.id.videoId;
+
+            if (isPlayerReady && player) {
+                player.loadVideoById(currentVideoId);
+            }
+
+            titleEl.innerText = item.snippet.title;
+            channelEl.innerText = item.snippet.channelTitle;
+            statusEl.innerText = "يعمل ✔";
+            loading.style.display = "none";
+            showToast("فيديو جديد");
+
+        } catch (err) {
+            console.error(err);
+            statusEl.innerText = "خطأ في التحميل";
+            loading.style.display = "none";
+            showToast("حدث خطأ");
         }
     }
 
-    document.getElementById('startBtn').onclick = () => {
-        if (!isRunning) startCamera();
-        else {
-            isRunning = false;
-            document.getElementById('startBtn').innerText = "تشغيل التحكم";
-            statusEl.innerText = "متوقف";
+    // سحب الإصبع
+    let startY = 0;
+    document.addEventListener('touchstart', e => {
+        startY = e.touches[0].clientY;
+    }, {passive: true});
+
+    document.addEventListener('touchend', e => {
+        const diff = startY - e.changedTouches[0].clientY;
+        if (Math.abs(diff) > 70) {
+            loadRandomVideo();
+            showToast(diff > 0 ? "التالي" : "التالي");
         }
-    };
+    }, {passive: true});
 
-    document.getElementById('nextBtn').onclick = nextVideo;
-    document.getElementById('likeBtn').onclick = () => {
-        likeCount++;
-        likeCountEl.innerText = likeCount;
+    // ضغط على الشاشة = إيقاف / تشغيل
+    document.getElementById('player').addEventListener('click', () => {
+        if (!player) return;
+        const state = player.getPlayerState();
+        if (state === YT.PlayerState.PLAYING) {
+            player.pauseVideo();
+            showToast("إيقاف");
+        } else {
+            player.playVideo();
+            showToast("تشغيل");
+        }
+    });
+
+    document.getElementById('likeBtn').addEventListener('click', (e) => {
+        e.stopPropagation();
         showToast("❤️");
-    };
+    });
 
-    // بدء التحميل
-    loadNewBatch();
+    document.getElementById('shareBtn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        showToast("مشاركة");
+    });
 </script>
 </body>
 </html>
