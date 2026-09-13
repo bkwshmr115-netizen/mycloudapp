@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>OMAR AI</title>
+  <style>
+    :root {
+      --bg: #050508;
+      --bg2: #080c09;
+      --panel: #0c1810;
+      --line: #1a3d28;
+      --green: #00ff66;
+      --green2: #6a9b7a;
+      --dim: #2a5c3a;
+      --danger: #ff3b30;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%; height: 100%;
+      background: var(--bg);
+      color: var(--green);
+      font-family: system-ui, -apple-system, "Segoe UI", Tahoma, sans-serif;
+      overflow: hidden;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+      background: radial-gradient(1200px 400px at 100% -10%, rgba(0,255,102,.08), transparent 55%), var(--bg);
+    }
+    #header {
+      position: relative;
+      padding: 12px 56px;
+      text-align: center;
+      border-bottom: 1px solid var(--green);
+      background: linear-gradient(180deg, #0a1f12, #050508);
+      flex-shrink: 0;
+    }
+    #header h1 { font-size: 20px; font-weight: 800; color: var(--green); }
+    #subtitle { font-size: 11px; color: var(--green2); margin-top: 3px; }
+    .icon-btn {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      width: 34px; height: 34px; border-radius: 50%;
+      background: transparent; border: 1px solid var(--green);
+      color: var(--green); cursor: pointer; font-size: 14px;
+      display: grid; place-items: center;
+    }
+    #clearBtn { left: 12px; }
+    #muteBtn { left: 52px; }
+    #exportBtn { right: 12px; }
+    #status {
+      position: absolute; right: 52px; top: 50%; transform: translateY(-50%);
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--green); box-shadow: 0 0 8px var(--green);
+    }
+    #status.busy { background: #ffcc00; box-shadow: 0 0 8px #ffcc00; animation: pulse 1s infinite; }
+    #status.err { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
+
+    #chat-zone {
+      flex: 1; overflow-y: auto; padding: 16px;
+      display: flex; flex-direction: column; gap: 14px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .msg {
+      max-width: 88%; padding: 12px 16px; border-radius: 16px;
+      font-size: 15px; line-height: 1.65; word-wrap: break-word;
+      overflow-wrap: anywhere; animation: slideUp .25s ease; white-space: pre-wrap;
+    }
+    .msg.user {
+      background: var(--green); color: #000;
+      align-self: flex-start; border-bottom-right-radius: 4px; font-weight: 500;
+    }
+    .msg.ai {
+      background: var(--panel); color: var(--green);
+      align-self: flex-end; border: 1px solid var(--line); white-space: normal;
+    }
+    .msg.loading { opacity: .8; font-style: italic; }
+    .msg img.gen { display: block; max-width: 100%; border-radius: 12px; margin-top: 8px; border: 1px solid var(--line); }
+    .msg a { color: #7dffb0; }
+    .msg ul, .msg ol { padding-right: 18px; margin: 8px 0; }
+    .msg p { margin: 0 0 .6em; }
+    .msg p:last-child { margin: 0; }
+    .code-wrap {
+      direction: ltr; text-align: left; background: #020403;
+      border: 1px solid var(--line); border-radius: 10px; margin: 8px 0; overflow: hidden;
+    }
+    .code-bar {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 6px 10px; font-size: 11px; color: var(--green2); border-bottom: 1px solid var(--line);
+    }
+    .code-bar button {
+      background: transparent; border: 1px solid var(--line); color: var(--green);
+      border-radius: 6px; padding: 2px 8px; cursor: pointer; font-size: 11px;
+    }
+    pre {
+      margin: 0; padding: 10px 12px; overflow-x: auto;
+      font-size: 12.5px; line-height: 1.5; color: #b8ffd0;
+      white-space: pre; direction: ltr; text-align: left;
+    }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .msg.ai code:not(pre code) {
+      background: #05150c; border: 1px solid var(--line);
+      padding: 1px 5px; border-radius: 5px; direction: ltr;
+    }
+
+    #suggest { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 16px 8px; }
+    #suggest button {
+      background: var(--panel); color: var(--green);
+      border: 1px solid var(--line); border-radius: 999px;
+      padding: 7px 12px; font-size: 12px; cursor: pointer;
+    }
+
+    #input-zone {
+      flex-shrink: 0; min-height: 72px; background: var(--bg2);
+      display: flex; align-items: flex-end;
+      padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+      border-top: 1px solid #112217; gap: 8px;
+    }
+    #user-input {
+      flex: 1; min-height: 48px; max-height: 140px;
+      background: #050806; border: 1px solid var(--line);
+      border-radius: 18px; padding: 12px 16px; color: var(--green);
+      font-size: 15px; outline: none; resize: none; font-family: inherit; line-height: 1.4;
+    }
+    #user-input:focus { border-color: var(--green); }
+    #user-input::placeholder { color: var(--dim); }
+    .btn-circle {
+      width: 48px; height: 48px; border-radius: 50%; border: none;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; cursor: pointer; flex-shrink: 0;
+    }
+    #attachBtn, #micBtn { background: var(--panel); color: var(--green); border: 1px solid var(--line); }
+    #micBtn.recording { background: var(--danger); color: #fff; border-color: var(--danger); animation: pulse 1s infinite; }
+    #sendBtn { background: var(--green); color: #000; font-weight: 800; }
+    #sendBtn:disabled { opacity: .45; cursor: not-allowed; }
+    #filePick { display: none; }
+
+    @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(255,59,48,.55); }
+      70% { box-shadow: 0 0 0 12px rgba(255,59,48,0); }
+      100% { box-shadow: 0 0 0 0 rgba(255,59,48,0); }
+    }
+  </style>
+</head>
+<body>
+  <div id="header">
+    <button class="icon-btn" id="clearBtn">🗑️</button>
+    <button class="icon-btn" id="muteBtn">🔊</button>
+    <h1>OMAR AI</h1>
+    <div id="subtitle">ذكاء اصطناعي • بحث • صور • كود</div>
+    <span id="status"></span>
+    <button class="icon-btn" id="exportBtn">⬇</button>
+  </div>
+
+  <div id="chat-zone"></div>
+  <div id="suggest"></div>
+
+  <div id="input-zone">
+    <input id="filePick" type="file" accept="image/*,.txt,.md,.json,.csv,.js,.html,.css,.py">
+    <button class="btn-circle" id="attachBtn">📎</button>
+    <button class="btn-circle" id="micBtn">🎤</button>
+    <textarea id="user-input" rows="1" placeholder="اسأل أي شيء..."></textarea>
+    <button class="btn-circle" id="sendBtn">◀</button>
+  </div>
+
+<script>
+(function () {
+  const chatZone = document.getElementById("chat-zone");
+  const userInput = document.getElementById("user-input");
+  const sendBtn = document.getElementById("sendBtn");
+  const micBtn = document.getElementById("micBtn");
+  const clearBtn = document.getElementById("clearBtn");
+  const muteBtn = document.getElementById("muteBtn");
+  const exportBtn = document.getElementById("exportBtn");
+  const attachBtn = document.getElementById("attachBtn");
+  const filePick = document.getElementById("filePick");
+  const statusEl = document.getElementById("status");
+  const suggestEl = document.getElementById("suggest");
+
+  const SYSTEM = `أنت OMAR AI. أسلوبك قريب من Grok: مباشر، صريح، مفيد، بدون تملق. ابدأ بالجواب مباشرة. استخدم عربية واضحة. إذا كتب بالإنجليزية رد بالإنجليزية. لا تختلق معلومات. التاريخ: 9 سبتمبر 2026.
+
+إذا احتجت أداة اكتب سطراً واحداً فقط:
+[[SEARCH: كلمات]]
+[[IMAGE: English prompt]]
+[[CALC: expression]]
+[[JS: code]]
+بعدها أكمل الرد النهائي.`;
+
+  let history = [];
+  let recognition = null;
+  let isRecording = false;
+  let isProcessing = false;
+  let muted = localStorage.getItem("omar_muted") === "1";
+  let pendingFiles = [];
+
+  muteBtn.textContent = muted ? "🔇" : "🔊";
+
+  try {
+    const raw = localStorage.getItem("omar_history_v6");
+    if (raw) history = JSON.parse(raw).slice(-18);
+  } catch {}
+
+  function saveHistory() {
+    try { localStorage.setItem("omar_history_v6", JSON.stringify(history.slice(-18))); } catch {}
+  }
+
+  function setBusy(on, err) {
+    statusEl.className = err ? "err" : (on ? "busy" : "");
+    sendBtn.disabled = !!on;
+    isProcessing = !!on;
+  }
+
+  function scrollBottom() {
+    chatZone.scrollTop = chatZone.scrollHeight;
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+  }
+
+  function renderMarkdown(text) {
+    let html = "";
+    const re = /```(\w*)\n?([\s\S]*?)```/g;
+    let last = 0, m, n = 0;
+    while ((m = re.exec(text))) {
+      html += formatBlocks(text.slice(last, m.index));
+      n++;
+      const id = "c" + Date.now() + n;
+      html += `<div class="code-wrap"><div class="code-bar"><span>\( {escapeHtml(m[1]||"code")}</span><button data-copy=" \){id}">نسخ</button></div><pre><code id="\( {id}"> \){escapeHtml(m[2].replace(/\n$/,""))}</code></pre></div>`;
+      last = m.index + m[0].length;
+    }
+    html += formatBlocks(text.slice(last));
+    return html;
+  }
+
+  function formatBlocks(chunk) {
+    if (!chunk) return "";
+    return chunk.split("\n").map(line => {
+      if (/^\s*[-•]\s+/.test(line)) return "<li>" + inline(line.replace(/^\s*[-•]\s+/, "")) + "</li>";
+      if (/^\s*\d+\.\s+/.test(line)) return "<li>" + inline(line.replace(/^\s*\d+\.\s+/, "")) + "</li>";
+      const img = line.match(/!\[([^\]]*)\]\((https?:[^)]+)\)/);
+      if (img) return `<img class="gen" src="${escapeHtml(img[2])}" alt="">`;
+      if (!line.trim()) return "";
+      return "<p>" + inline(line) + "</p>";
+    }).join("").replace(/(<li>.*<\/li>)+/g, m => "<ul>" + m + "</ul>");
+  }
+
+  function inline(s) {
+    return escapeHtml(s)
+      .replace(/`([^`]+)`/g, '<code dir="ltr">$1</code>')
+      .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+      .replace(/\[([^\]]+)\]\((https?:[^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+  }
+
+  function appendMessage(text, sender, loading) {
+    const div = document.createElement("div");
+    div.className = "msg " + sender + (loading ? " loading" : "");
+    if (sender === "ai" && !loading) div.innerHTML = renderMarkdown(text);
+    else div.textContent = text;
+    chatZone.appendChild(div);
+    scrollBottom();
+    return div;
+  }
+
+  function bindCopy(root) {
+    root.querySelectorAll("[data-copy]").forEach(btn => {
+      btn.onclick = () => {
+        const el = document.getElementById(btn.dataset.copy);
+        if (el) navigator.clipboard.writeText(el.textContent).then(() => {
+          btn.textContent = "تم";
+          setTimeout(() => btn.textContent = "نسخ", 1000);
+        });
+      };
+    });
+  }
+
+  function speak(text) {
+    if (muted || !window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(String(text).replace(/```[\s\S]*?```/g, "كود").slice(0, 900));
+    u.lang = "ar-SA";
+    u.rate = 0.95;
+    window.speechSynthesis.speak(u);
+  }
+
+  async function callAI(messages) {
+    const endpoints = [
+      "https://text.pollinations.ai/openai",
+      "https://text.pollinations.ai/v1/chat/completions"
+    ];
+    for (const url of endpoints) {
+      try {
+        const r = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ model: "openai", messages, temperature: 0.7 })
+        });
+        if (!r.ok) continue;
+        const data = await r.json();
+        const content = data.choices?.[0]?.message?.content || data.message?.content || data.text;
+        if (content && content.trim()) return content.trim();
+      } catch {}
+    }
+    // طريقة بديلة
+    const prompt = messages.map(m => `${m.role}: ${m.content}`).join("\n");
+    const r2 = await fetch("https://text.pollinations.ai/" + encodeURIComponent(prompt));
+    if (r2.ok) {
+      const t = await r2.text();
+      if (t.trim()) return t.trim();
+    }
+    throw new Error("فشل الاتصال بالخدمة");
+  }
+
+  function parseTool(text) {
+    const m = text.match(/\[\[(SEARCH|IMAGE|CALC|JS):\s*([\s\S]*?)\]\]/i);
+    return m ? { name: m[1].toUpperCase(), query: m[2].trim(), raw: m[0] } : null;
+  }
+
+  async function wikiSearch(q) {
+    try {
+      const r = await fetch("https://ar.wikipedia.org/w/api.php?action=query&list=search&format=json&origin=*&srlimit=4&srsearch=" + encodeURIComponent(q));
+      const data = await r.json();
+      const items = data.query?.search || [];
+      return items.length ? items.map(x => `- ${x.title}: ${x.snippet.replace(/<[^>]+>/g,"")}`).join("\n") : "لا نتائج";
+    } catch { return "تعذر البحث"; }
+  }
+
+  function imageUrl(p) {
+    return "https://image.pollinations.ai/prompt/" + encodeURIComponent(p) + "?width=1024&height=1024&nologo=true&seed=" + Date.now();
+  }
+
+  async function processMessage(text) {
+    const raw = (text || "").trim();
+    if (isProcessing || !raw) return;
+
+    setBusy(true);
+    suggestEl.innerHTML = "";
+    appendMessage(raw, "user");
+    userInput.value = "";
+    autosize();
+
+    const loading = appendMessage("جاري التفكير...", "ai", true);
+
+    try {
+      history.push({ role: "user", content: raw });
+
+      let reply = "";
+      let guard = 0;
+
+      while (guard < 3) {
+        guard++;
+        const messages = [
+          { role: "system", content: SYSTEM },
+          ...history.slice(-12)
+        ];
+        reply = await callAI(messages);
+
+        const tool = parseTool(reply);
+        if (!tool) break;
+
+        let result = "";
+        if (tool.name === "SEARCH") result = await wikiSearch(tool.query);
+        else if (tool.name === "IMAGE") {
+          reply = reply.replace(tool.raw, "").trim() + "\n\n![](" + imageUrl(tool.query) + ")";
+          break;
+        }
+        else if (tool.name === "CALC") {
+          try { result = String(Function('"use strict";return(' + tool.query.replace(/\^/g,"**") + ")")()); }
+          catch { result = "خطأ في الحساب"; }
+        }
+        else if (tool.name === "JS") {
+          try { result = String(Function('"use strict";return(' + tool.query + ")")()); }
+          catch(e) { result = "خطأ: " + e.message; }
+        }
+
+        history.push({ role: "system", content: "نتيجة الأداة:\n" + result + "\nأكمل الرد." });
+      }
+
+      reply = reply.replace(/\[\[(?:SEARCH|IMAGE|CALC|JS):[\s\S]*?\]\]/g, "").trim() || "ما قدرت أطلع رد.";
+      history.push({ role: "assistant", content: reply });
+      saveHistory();
+
+      loading.classList.remove("loading");
+      loading.innerHTML = renderMarkdown(reply);
+      bindCopy(loading);
+      speak(reply);
+      setBusy(false);
+    } catch (e) {
+      loading.classList.remove("loading");
+      loading.textContent = "صار خطأ في الاتصال. تأكد من الإنترنت وحاول مرة ثانية.";
+      setBusy(false, true);
+    }
+    scrollBottom();
+  }
+
+  function autosize() {
+    userInput.style.height = "auto";
+    userInput.style.height = Math.min(userInput.scrollHeight, 140) + "px";
+  }
+
+  function welcome() {
+    chatZone.innerHTML = "";
+    appendMessage("مرحباً، أنا OMAR AI.\nاسألني أي شيء.", "ai");
+    ["شرح الذكاء الاصطناعي", "اكتب كود بايثون", "ارسم صورة", "ابحث عن أخبار"].forEach(s => {
+      const b = document.createElement("button");
+      b.textContent = s;
+      b.onclick = () => processMessage(s);
+      suggestEl.appendChild(b);
+    });
+  }
+
+  // الأحداث
+  sendBtn.onclick = () => processMessage(userInput.value);
+  userInput.addEventListener("input", autosize);
+  userInput.addEventListener("keydown", e => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      processMessage(userInput.value);
+    }
+  });
+
+  micBtn.onclick = () => {
+    if (window.cordova && cordova.plugins && cordova.plugins.permissions) {
+      cordova.plugins.permissions.requestPermission(
+        cordova.plugins.permissions.RECORD_AUDIO,
+        status => {
+          if (status.hasPermission) startVoice();
+          else alert("يجب السماح بالمايكروفون");
+        },
+        () => alert("فشل طلب الصلاحية")
+      );
+    } else {
+      startVoice();
+    }
+  };
+
+  function startVoice() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) return alert("المتصفح لا يدعم الصوت");
+    if (!recognition) {
+      recognition = new SR();
+      recognition.lang = "ar-SA";
+      recognition.onresult = e => processMessage(e.results[0][0].transcript);
+      recognition.onend = () => { isRecording = false; micBtn.classList.remove("recording"); };
+    }
+    if (!isRecording) {
+      isRecording = true;
+      micBtn.classList.add("recording");
+      recognition.start();
+    } else {
+      recognition.stop();
+    }
+  }
+
+  muteBtn.onclick = () => {
+    muted = !muted;
+    localStorage.setItem("omar_muted", muted ? "1" : "0");
+    muteBtn.textContent = muted ? "🔇" : "🔊";
+    if (muted) window.speechSynthesis?.cancel();
+  };
+
+  clearBtn.onclick = () => {
+    if (confirm("مسح المحادثة؟")) {
+      history = [];
+      saveHistory();
+      welcome();
+    }
+  };
+
+  exportBtn.onclick = () => {
+    const text = history.map(m => (m.role === "user" ? "أنت: " : "OMAR: ") + m.content).join("\n\n");
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([text], { type: "text/plain" }));
+    a.download = "chat.txt";
+    a.click();
+  };
+
+  attachBtn.onclick = () => filePick.click();
+
+  if (history.length) {
+    history.forEach(m => {
+      if (m.role === "user") appendMessage(m.content, "user");
+      else if (m.role === "assistant") {
+        const el = appendMessage(m.content, "ai");
+        bindCopy(el);
+      }
+    });
+  } else {
+    welcome();
+  }
+})();
+</script>
+</body>
+</html>

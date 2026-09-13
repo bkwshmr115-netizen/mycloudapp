@@ -1,0 +1,26 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.omar.signlink.app-mergeDebugResources-24:/values-night-v34/values-night-v34.xml",
+            "map": [
+                {
+                    "source": "/home/runner/work/mycloudapp/mycloudapp/myapp/platforms/android/app/src/main/res/values-night-v34/cdv_colors.xml",
+                    "from": {
+                        "startLines": "20,21",
+                        "startColumns": "4,4",
+                        "startOffsets": "831,916",
+                        "endColumns": "84,81",
+                        "endOffsets": "911,993"
+                    },
+                    "to": {
+                        "startLines": "2,3",
+                        "startColumns": "4,4",
+                        "startOffsets": "55,140",
+                        "endColumns": "84,81",
+                        "endOffsets": "135,217"
+                    }
+                }
+            ]
+        }
+    ]
+}

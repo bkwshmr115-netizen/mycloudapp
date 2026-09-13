@@ -1,0 +1,9 @@
+{
+  "name": "myapp",
+  "version": "1.0",
+  "architecture": "all",
+  "maintainer": "creative_user",
+  "description": "تطبيقي التفاعلي الأول لحماية البيانات",
+  "depends": ["python", "python-tkinter"]
+}
+

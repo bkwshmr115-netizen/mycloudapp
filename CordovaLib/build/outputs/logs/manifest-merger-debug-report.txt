@@ -1,0 +1,20 @@
+-- Merging decision tree log ---
+manifest
+ADDED from /home/runner/work/mycloudapp/mycloudapp/myapp/platforms/android/CordovaLib/AndroidManifest.xml:20:1-23:12
+INJECTED from /home/runner/work/mycloudapp/mycloudapp/myapp/platforms/android/CordovaLib/AndroidManifest.xml:20:1-23:12
+	package
+		INJECTED from /home/runner/work/mycloudapp/mycloudapp/myapp/platforms/android/CordovaLib/AndroidManifest.xml
+	android:versionName
+		ADDED from /home/runner/work/mycloudapp/mycloudapp/myapp/platforms/android/CordovaLib/AndroidManifest.xml:21:3-28
+	xmlns:android
+		ADDED from /home/runner/work/mycloudapp/mycloudapp/myapp/platforms/android/CordovaLib/AndroidManifest.xml:20:11-69
+	android:versionCode
+		ADDED from /home/runner/work/mycloudapp/mycloudapp/myapp/platforms/android/CordovaLib/AndroidManifest.xml:22:3-26
+uses-sdk
+INJECTED from /home/runner/work/mycloudapp/mycloudapp/myapp/platforms/android/CordovaLib/AndroidManifest.xml reason: use-sdk injection requested
+INJECTED from /home/runner/work/mycloudapp/mycloudapp/myapp/platforms/android/CordovaLib/AndroidManifest.xml
+INJECTED from /home/runner/work/mycloudapp/mycloudapp/myapp/platforms/android/CordovaLib/AndroidManifest.xml
+	android:targetSdkVersion
+		INJECTED from /home/runner/work/mycloudapp/mycloudapp/myapp/platforms/android/CordovaLib/AndroidManifest.xml
+	android:minSdkVersion
+		INJECTED from /home/runner/work/mycloudapp/mycloudapp/myapp/platforms/android/CordovaLib/AndroidManifest.xml
