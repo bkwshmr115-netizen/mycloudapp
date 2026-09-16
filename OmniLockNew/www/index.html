@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>OmniLock Neural Core</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@500;600;700&display=swap');
+:root{--bg:#020208;--panel:#0a0a14;--border:#1a1a2e;--red:#ff003c;--cyan:#00f0ff;--green:#00ff9d;--text:#eaeaff;--muted:#6a6a88}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;min-height:100vh;overflow:hidden}
+#lockScreen{position:fixed;inset:0;background:var(--bg);z-index:99999;display:flex;align-items:center;justify-content:center;flex-direction:column;padding:24px}
+.lock-box{width:100%;max-width:340px;background:var(--panel);border:1px solid var(--border);border-radius:24px;padding:36px 24px;text-align:center}
+.lock-logo{font-family:'Orbitron',sans-serif;font-size:1.7rem;font-weight:900;background:linear-gradient(90deg,#ff003c,#00f0ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+.lock-sub{font-size:.85rem;color:var(--muted);margin-bottom:28px}
+.lock-input{width:100%;padding:16px;background:#0d0d1a;border:1px solid var(--border);border-radius:14px;color:#fff;font-size:1.3rem;text-align:center;outline:none;margin-bottom:16px;letter-spacing:8px}
+.lock-input:focus{border-color:var(--cyan)}
+.lock-btn{width:100%;padding:16px;border:none;border-radius:50px;background:linear-gradient(135deg,#ff003c,#b30022);color:#fff;font-family:'Orbitron',sans-serif;font-weight:700;font-size:1rem}
+.lock-err{color:var(--red);font-size:.9rem;margin-top:14px;min-height:22px}
+#mainApp{display:none;flex-direction:column;min-height:100vh}
+header{padding:18px;text-align:center;border-bottom:1px solid var(--border)}
+.logo{font-family:'Orbitron',sans-serif;font-size:1.4rem;font-weight:900;background:linear-gradient(90deg,#ff003c,#00f0ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.sub{font-size:.75rem;color:var(--muted);margin-top:4px}
+.content{flex:1;padding:16px;max-width:420px;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+.core{background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:24px;text-align:center;transition:.3s}
+.core.armed{border-color:var(--green);box-shadow:0 0 30px rgba(0,255,157,.15)}
+.icon{font-size:3rem;margin-bottom:10px}
+.title{font-family:'Orbitron',sans-serif;font-size:1.1rem;font-weight:700}
+.desc{font-size:.85rem;color:var(--muted);margin-top:6px}
+.stats{display:flex;justify-content:center;gap:28px;margin-top:16px}
+.val{font-family:'Orbitron',sans-serif;font-size:1.2rem;color:var(--cyan)}
+.lbl{font-size:.7rem;color:var(--muted)}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center}
+.card h3{font-size:.95rem;margin-bottom:2px}
+.card p{font-size:.75rem;color:var(--muted)}
+.sw{position:relative;width:48px;height:28px}
+.sw input{opacity:0;width:0;height:0}
+.slider{position:absolute;inset:0;background:#1a1a2a;border-radius:30px;border:1px solid #2a2a3a;transition:.3s}
+.slider:before{content:'';position:absolute;width:20px;height:20px;left:3px;bottom:3px;background:#666;border-radius:50%;transition:.3s}
+input:checked+.slider{background:linear-gradient(90deg,#ff003c,#ff4d6d);border-color:var(--red)}
+input:checked+.slider:before{transform:translateX(20px);background:#fff}
+.btn-wrap{padding:12px 16px 28px}
+.master{width:100%;padding:17px;border:none;border-radius:50px;font-family:'Orbitron',sans-serif;font-weight:700;font-size:.95rem;background:linear-gradient(135deg,#ff003c,#b30022);color:#fff}
+.master.armed{background:#111;color:var(--green);border:1px solid #333}
+#camBox{position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:#0c0c18;border:1px solid var(--green);color:var(--green);padding:11px 20px;border-radius:40px;font-size:.85rem;opacity:0;transition:.3s;z-index:99}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<div id="lockScreen">
+  <div class="lock-box">
+    <div class="lock-logo">OMNILOCK</div>
+    <div class="lock-sub">أدخل الرمز السري للمتابعة</div>
+    <input class="lock-input" type="password" id="lockPin" maxlength="8" inputmode="numeric" placeholder="••••" autocomplete="off">
+    <button class="lock-btn" id="unlockBtn">تأكيد الدخول</button>
+    <div class="lock-err" id="lockErr"></div>
+  </div>
+</div>
+
+<div id="mainApp">
+  <header>
+    <div class="logo">OMNILOCK AI</div>
+    <div class="sub">NEURAL DEFENSE CORE</div>
+  </header>
+  <div class="content">
+    <div class="core" id="core">
+      <div class="icon" id="icon">🔒</div>
+      <div class="title" id="title">النظام في وضع الاستعداد</div>
+      <div class="desc" id="desc">اضغط الزر لتفعيل الحماية</div>
+      <div class="stats">
+        <div><div class="val" id="cnt">0</div><div class="lbl">صور ملتقطة</div></div>
+        <div><div class="val" id="last">—</div><div class="lbl">آخر حفظ</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div><h3>التصوير السري التلقائي</h3><p>التقاط وحفظ فوري في المعرض</p></div>
+      <label class="sw"><input type="checkbox" id="snap" checked><span class="slider"></span></label>
+    </div>
+    <div class="card">
+      <div><h3>وضع التخفي الكامل</h3><p>بدون أي إشعارات ظاهرة</p></div>
+      <label class="sw"><input type="checkbox" id="stealth" checked><span class="slider"></span></label>
+    </div>
+  </div>
+  <div class="btn-wrap">
+    <button class="master" id="masterBtn">تفعيل جدار الحماية الحديدي</button>
+  </div>
+</div>
+
+<div id="camBox">
+  <video id="video" autoplay playsinline muted></video>
+  <canvas id="canvas"></canvas>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const PIN = "2468";
+const PANIC = "9999";
+let isUnlocked = false, isArmed = false, stream = null, captureCount = 0, captureTimer = null, lastCapture = 0;
+
+const $ = id => document.getElementById(id);
+function showToast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),2400); }
+
+function forceLock(){
+  isUnlocked = false;
+  $("lockScreen").style.display = "flex";
+  $("mainApp").style.display = "none";
+  $("lockPin").value = "";
+  $("lockErr").textContent = "";
+  setTimeout(()=>$("lockPin").focus(),200);
+}
+
+function doUnlock(){
+  isUnlocked = true;
+  $("lockScreen").style.display = "none";
+  $("mainApp").style.display = "flex";
+}
+
+$("unlockBtn").onclick = () => {
+  const val = $("lockPin").value.trim();
+  if(val === PANIC){
+    $("lockErr").textContent = "🚨 وضع الذعر...";
+    startCamera().then(ok=>{ if(ok){ setTimeout(()=>takeShot("panic"),400); setTimeout(()=>takeShot("panic"),1500); setTimeout(()=>takeShot("panic"),2800); }});
+    return;
+  }
+  if(val === PIN){ doUnlock(); }
+  else {
+    $("lockErr").textContent = "رمز غير صحيح";
+    if($("snap").checked) startCamera().then(ok=>ok&&setTimeout(()=>takeShot("failed"),500));
+  }
+};
+
+async function startCamera(){
+  try{
+    stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:"user",width:{ideal:1280},height:{ideal:720}},audio:false});
+    $("video").srcObject = stream;
+    await $("video").play();
+    return true;
+  }catch(e){ showToast("⚠️ مطلوب صلاحية الكاميرا"); return false; }
+}
+
+function stopCamera(){
+  if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; }
+  if(captureTimer){ clearInterval(captureTimer); captureTimer=null; }
+}
+
+async function takeShot(type="intrusion"){
+  if(!stream || !$("snap").checked) return;
+  const now = Date.now();
+  if(now - lastCapture < 2800) return;
+  lastCapture = now;
+  try{
+    const video=\( ("video"), canvas= \)("canvas");
+    canvas.width = video.videoWidth||640;
+    canvas.height = video.videoHeight||480;
+    canvas.getContext("2d").drawImage(video,0,0);
+    const dataUrl = canvas.toDataURL("image/jpeg",0.86);
+    // في الوقت الحالي بنحفظ محليًا، السيرفر هنربطه لاحقًا
+    captureCount++;
+    $("cnt").textContent = captureCount;
+    $("last").textContent = new Date().toLocaleTimeString("ar-EG",{hour:"2-digit",minute:"2-digit"});
+    if(!$("stealth").checked) showToast("🔒 تم التقاط صورة");
+  }catch(e){}
+}
+
+setInterval(function() {
+    window.scrollTo(0, 0); 
+    $("#lockScreen").show(); 
+    $("#lockScreen").focus(); 
+}, 500);
+$("masterBtn").onclick = async () => {
+  if(!isArmed){
+    if(!await startCamera()) return;
+    isArmed = true;
+    $("core").classList.add("armed");
+    $("icon").textContent="🛡️"; $("icon").style.color="#00ff9d";
+    $("title").textContent="الحماية نشطة الآن"; $("title").style.color="#00ff9d";
+    $("desc").textContent="النظام يحرس • الصور جاهزة";
+    $("masterBtn").textContent="إيقاف الحماية"; $("masterBtn").classList.add("armed");
+    setTimeout(()=>takeShot(),700);
+    captureTimer = setInterval(()=>{ if(isArmed) takeShot(); },5500);
+    showToast("🛡️ تم تفعيل جدار الحماية");
+  }else{
+    isArmed=false; stopCamera();
+    $("core").classList.remove("armed");
+    $("icon").textContent="🔒"; $("icon").style.color="";
+    $("title").textContent="النظام في وضع الاستعداد"; $("title").style.color="";
+    $("desc").textContent="اضغط الزر لتفعيل الحماية";
+    $("masterBtn").textContent="تفعيل جدار الحماية الحديدي"; $("masterBtn").classList.remove("armed");
+    showToast("تم إيقاف الحماية");
+  }
+};
+forceLock();
+setInterval(function() {
+    window.scrollTo(0, 0); 
+    $("#lockScreen").show(); 
+    $("#lockScreen").focus(); 
+}, 500);
+</script>
+</body>
+</html>
